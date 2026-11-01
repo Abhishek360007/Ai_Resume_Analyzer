@@ -14,6 +14,9 @@ Built with **Java 21 / Spring Boot 3**, **Spring AI**, **PostgreSQL + pgvector**
 - **AI candidate extraction** – the LLM pulls out name, contact details, skills, years of experience, education and a short summary.
 - **Semantic search** – resume embeddings are stored in pgvector for similarity search.
 - **Job matching** – create job requirements (skills, experience range, education) and let the AI score and rank every candidate, with explanations.
+- **Score insights** – a radar chart compares the top candidate with the pool average on skills, experience, education and domain fit, alongside a score distribution and a callout for the pool's weakest area.
+- **PDF match reports** – export a ranked, shareable PDF with job details, summary statistics, a score table and the AI analysis for every candidate.
+- **Pluggable LLM providers** – run on LM Studio (default), Ollama or OpenAI by switching a Spring profile.
 - **Profile enrichment (Agentic RAG)** – optionally enrich candidates with GitHub / LinkedIn / Twitter / web-search context before matching; borderline candidates get a second AI pass.
 - **Async processing pipeline** – uploads are queued and processed by an Apache Pekko actor pool, with live progress over Server-Sent Events.
 - **Role-based access control** – JWT authentication with four roles: Admin, Recruiter, HR and Hiring Manager.
@@ -69,7 +72,7 @@ Built with **Java 21 / Spring Boot 3**, **Spring AI**, **PostgreSQL + pgvector**
 - Java 21 and Maven 3.9+
 - Node.js 20+ and Yarn (only for frontend development; the Maven build downloads its own)
 - PostgreSQL 15+ with the `vector` extension
-- [LM Studio](https://lmstudio.ai/) running a chat model and an embedding model (e.g. `nomic-embed-text`)
+- An LLM provider: [LM Studio](https://lmstudio.ai/) (default), [Ollama](https://ollama.com/) or an OpenAI API key. Local providers need a chat model and an embedding model (e.g. `nomic-embed-text`). See [Choosing an LLM provider](#-choosing-an-llm-provider).
 
 ### 1. Database
 
@@ -126,6 +129,33 @@ See [docs/DOCKER-DEPLOYMENT.md](docs/DOCKER-DEPLOYMENT.md) for details.
 ```bash
 mvn clean package          # builds the frontend and bundles it into one JAR
 java -jar target/resume-analyzer-1.0.0.jar
+```
+
+## 🤖 Choosing an LLM Provider
+
+All providers go through Spring AI's OpenAI-compatible client, so you switch provider by switching profile. The code doesn't change.
+
+| Provider | How to enable | Key settings |
+|---|---|---|
+| LM Studio (default) | nothing to do | `LLM_STUDIO_BASE_URL`, `LLM_STUDIO_MODEL`, `LLM_STUDIO_EMBEDDING_MODEL` |
+| Ollama | `SPRING_PROFILES_ACTIVE=ollama` | `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `OLLAMA_EMBEDDING_MODEL` |
+| OpenAI | `SPRING_PROFILES_ACTIVE=openai` | `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_EMBEDDING_MODEL` |
+
+```bash
+# Example: run with Ollama
+ollama pull llama3.1:8b && ollama pull nomic-embed-text
+SPRING_PROFILES_ACTIVE=ollama mvn spring-boot:run
+```
+
+Embeddings are stored in a `vector(768)` column. `nomic-embed-text` produces 768 dimensions natively, and the OpenAI profile asks `text-embedding-3-small` for 768 dimensions. The admin dashboard health check reports the active provider by name.
+
+## 📄 Match Reports
+
+On the **Candidate Matching** page, select a job and click **📄 Export PDF Report**. The report is also available over REST for any authenticated role:
+
+```
+GET /api/reports/jobs/{jobRequirementId}/matches.pdf
+Authorization: Bearer <access token>
 ```
 
 ## 🔐 Default Users
