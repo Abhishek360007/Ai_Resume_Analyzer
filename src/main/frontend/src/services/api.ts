@@ -74,3 +74,21 @@ export const getJobQueueStats = async (): Promise<JobQueueStats> => {
   const response = await axiosInstance.get<JobQueueStats>('/api/jobs/stats')
   return response.data
 }
+
+/**
+ * Download the PDF match report for a job requirement and save it in the browser.
+ */
+export const downloadMatchReport = async (jobId: string, jobTitle?: string): Promise<void> => {
+  const response = await axiosInstance.get<Blob>(`/api/reports/jobs/${jobId}/matches.pdf`, {
+    responseType: 'blob',
+  })
+  const url = URL.createObjectURL(response.data)
+  const safeTitle = (jobTitle || 'job').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `match-report-${safeTitle || 'job'}.pdf`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
