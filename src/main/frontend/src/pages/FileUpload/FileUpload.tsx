@@ -61,7 +61,7 @@ const FileUpload = () => {
     e.preventDefault()
     setDragging(false)
     const droppedFiles = Array.from(e.dataTransfer.files).filter((file) =>
-      file.name.match(/\.(pdf|doc|docx|zip)$/i)
+      file.name.match(/\.(pdf|doc|docx|txt|zip)$/i)
     )
     setFiles((prev) => [...prev, ...droppedFiles])
   }
@@ -185,12 +185,12 @@ const FileUpload = () => {
           onClick={() => fileInputRef.current?.click()}
         >
           <p>📁 Drag & drop resume files here</p>
-          <small>or click to browse (PDF, DOC, DOCX, ZIP)</small>
+          <small>or click to browse (PDF, DOC, DOCX, TXT, ZIP)</small>
           <input
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".pdf,.doc,.docx,.zip"
+            accept=".pdf,.doc,.docx,.txt,.zip"
             onChange={handleFileSelect}
             className={styles.fileInput}
             aria-label="Resume file upload"

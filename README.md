@@ -10,7 +10,7 @@ Built with **Java 21 / Spring Boot 3**, **Spring AI**, **PostgreSQL + pgvector**
 
 ## ✨ Features
 
-- **Resume parsing** – upload PDF, DOC and DOCX files (single or bulk). Text is extracted with Apache PDFBox / Apache POI.
+- **Resume parsing** – upload PDF, DOC, DOCX and TXT files, individually, in bulk or as a ZIP. Text is extracted with Apache PDFBox / Apache POI.
 - **AI candidate extraction** – the LLM pulls out name, contact details, skills, years of experience, education and a short summary.
 - **Semantic search** – resume embeddings are stored in pgvector for similarity search.
 - **Job matching** – create job requirements (skills, experience range, education) and let the AI score and rank every candidate, with explanations.

@@ -115,10 +115,10 @@ class FileParserServiceTest {
     @DisplayName("Should throw exception for unsupported file format")
     void shouldThrowExceptionForUnsupportedFormat() {
         // Given
-        byte[] textData = "Plain text content".getBytes();
+        byte[] textData = "{\rtf1 Plain text content}".getBytes();
 
         // When/Then
-        assertThatThrownBy(() -> fileParserService.extractText(textData, "resume.txt"))
+        assertThatThrownBy(() -> fileParserService.extractText(textData, "resume.rtf"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unsupported file format");
     }
@@ -168,10 +168,32 @@ class FileParserServiceTest {
     }
 
     @Test
+    @DisplayName("Should accept plain-text resumes")
+    void shouldValidateTxtFormat() {
+        assertThat(fileParserService.isValidFileFormat("resume.txt")).isTrue();
+        assertThat(fileParserService.isValidFileFormat("RESUME.TXT")).isTrue();
+    }
+
+    @Test
+    @DisplayName("Should extract UTF-8 text and strip a byte-order mark")
+    void shouldExtractUtf8Text() throws Exception {
+        byte[] data = "\uFEFF  Priya Sharma \u2014 Java Developer\n".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+        assertThat(fileParserService.extractText(data, "resume.txt")).isEqualTo("Priya Sharma \u2014 Java Developer");
+    }
+
+    @Test
+    @DisplayName("Should fall back to Windows-1252 for non-UTF-8 text files")
+    void shouldExtractWindows1252Text() throws Exception {
+        byte[] data = "Jos\u00e9 \u2013 Caf\u00e9 Developer".getBytes(java.nio.charset.Charset.forName("windows-1252"));
+
+        assertThat(fileParserService.extractText(data, "resume.txt")).isEqualTo("Jos\u00e9 \u2013 Caf\u00e9 Developer");
+    }
+
+    @Test
     @DisplayName("Should reject invalid file formats")
     void shouldRejectInvalidFormats() {
         // When/Then
-        assertThat(fileParserService.isValidFileFormat("resume.txt")).isFalse();
         assertThat(fileParserService.isValidFileFormat("resume.rtf")).isFalse();
         assertThat(fileParserService.isValidFileFormat("resume.odt")).isFalse();
         assertThat(fileParserService.isValidFileFormat("resume")).isFalse();

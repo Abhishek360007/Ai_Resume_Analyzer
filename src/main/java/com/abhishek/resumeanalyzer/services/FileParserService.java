@@ -38,8 +38,31 @@ public class FileParserService {
             case ".pdf" -> extractFromPdf(fileData);
             case ".docx" -> extractFromDocx(fileData);
             case ".doc" -> extractFromDoc(fileData);
+            case ".txt" -> extractFromText(fileData);
             default -> throw new IllegalArgumentException("Unsupported file format: " + extension);
         };
+    }
+
+    /**
+     * Read a plain-text resume, accepting UTF-8 (with or without BOM) and
+     * falling back to Windows-1252 for files saved by older editors.
+     *
+     * @param fileData Raw text bytes
+     * @return Text content
+     */
+    private String extractFromText(byte[] fileData) {
+        java.nio.charset.CharsetDecoder utf8 = java.nio.charset.StandardCharsets.UTF_8.newDecoder();
+        String text;
+        try {
+            text = utf8.decode(java.nio.ByteBuffer.wrap(fileData)).toString();
+        } catch (java.nio.charset.CharacterCodingException e) {
+            text = new String(fileData, java.nio.charset.Charset.forName("windows-1252"));
+        }
+        if (!text.isEmpty() && text.charAt(0) == 0xFEFF) { // byte-order mark
+            text = text.substring(1);
+        }
+        log.info("Extracted {} characters from text file", text.length());
+        return text.trim();
     }
 
     /**
@@ -126,6 +149,7 @@ public class FileParserService {
      */
     public boolean isValidFileFormat(String filename) {
         String extension = getFileExtension(filename).toLowerCase();
-        return extension.equals(".pdf") || extension.equals(".docx") || extension.equals(".doc");
+        return extension.equals(".pdf") || extension.equals(".docx") || extension.equals(".doc")
+                || extension.equals(".txt");
     }
 }

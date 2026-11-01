@@ -43,7 +43,7 @@ public class FileUploadService {
     @Value("${app.upload.directory:./uploads}")
     private String uploadDirectory;
 
-    @Value("${app.upload.allowed-extensions:.doc,.docx,.pdf}")
+    @Value("${app.upload.allowed-extensions:.doc,.docx,.pdf,.txt}")
     private String allowedExtensions;
 
     /**
