@@ -368,4 +368,55 @@ class CandidateMatchingServiceTest {
         assertThat(results).hasSize(1); // Only successful match
         verify(aiService, times(2)).matchCandidate(any());
     }
+
+    @Test
+    @DisplayName("Should not save a placeholder 0% match when the AI is unavailable")
+    void matchCandidateToJob_aiFallback_doesNotPersist() {
+        when(candidateRepository.findById(candidateId)).thenReturn(Optional.of(mockCandidate));
+        when(jobRequirementRepository.findById(jobRequirementId)).thenReturn(Optional.of(mockJobRequirement));
+        when(matchRepository.findByCandidateIdAndJobRequirementId(candidateId, jobRequirementId))
+                .thenReturn(Optional.empty());
+        when(aiService.matchCandidate(any()))
+                .thenReturn(CandidateMatchResponse.builder().matchScore(0.0).fallback(true).build());
+
+        assertThatThrownBy(() -> candidateMatchingService.matchCandidateToJob(candidateId, jobRequirementId))
+                .isInstanceOf(com.abhishek.resumeanalyzer.exceptions.LlmServiceException.class)
+                .hasMessageContaining("AI matching is unavailable");
+        verify(matchRepository, never()).save(any(CandidateMatch.class));
+    }
+
+    @Test
+    @DisplayName("Should report an error when every candidate fails to match")
+    void matchAllCandidatesToJob_allFail_throwsAndFailsAudit() {
+        when(jobRequirementRepository.findById(jobRequirementId)).thenReturn(Optional.of(mockJobRequirement));
+        when(candidateRepository.findByStatus(CandidateStatus.ACTIVE)).thenReturn(List.of(mockCandidate));
+        when(matchRepository.findByCandidateIdAndJobRequirementId(any(), any())).thenReturn(Optional.empty());
+        when(aiService.matchCandidate(any()))
+                .thenReturn(CandidateMatchResponse.builder().matchScore(0.0).fallback(true).build());
+
+        assertThatThrownBy(() -> candidateMatchingService.matchAllCandidatesToJob(jobRequirementId))
+                .isInstanceOf(com.abhishek.resumeanalyzer.exceptions.LlmServiceException.class);
+        verify(matchRepository, never()).save(any(CandidateMatch.class));
+        verify(matchAuditService).failAudit(any(), any(), anyLong());
+        verify(matchAuditService, never()).completeAudit(any(), any(), anyLong());
+    }
+
+    @Test
+    @DisplayName("Should keep successful matches when only some candidates fail")
+    void matchAllCandidatesToJob_partialFailure_returnsSuccessfulMatches() {
+        Candidate other = Candidate.builder().id(UUID.randomUUID()).name("Jane Smith").skills("Python").build();
+        when(jobRequirementRepository.findById(jobRequirementId)).thenReturn(Optional.of(mockJobRequirement));
+        when(candidateRepository.findByStatus(CandidateStatus.ACTIVE)).thenReturn(List.of(mockCandidate, other));
+        when(matchRepository.findByCandidateIdAndJobRequirementId(any(), any())).thenReturn(Optional.empty());
+        when(aiService.matchCandidate(any()))
+                .thenReturn(mockMatchResponse)
+                .thenReturn(CandidateMatchResponse.builder().matchScore(0.0).fallback(true).build());
+        when(matchRepository.save(any(CandidateMatch.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        List<CandidateMatch> results = candidateMatchingService.matchAllCandidatesToJob(jobRequirementId);
+
+        assertThat(results).hasSize(1);
+        verify(matchRepository, times(1)).save(any(CandidateMatch.class));
+        verify(matchAuditService).completeAudit(any(), any(), anyLong());
+    }
 }

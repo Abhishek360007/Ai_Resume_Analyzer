@@ -1,5 +1,6 @@
 package com.abhishek.resumeanalyzer.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -59,4 +60,12 @@ public class CandidateMatchResponse {
      * Recommendation (e.g., "Strong Match", "Good Match", "Partial Match", "No Match")
      */
     private String recommendation;
+
+    /**
+     * True when this is a placeholder produced because the LLM call failed,
+     * so callers must not persist it as a real result.
+     */
+    @JsonIgnore
+    @Builder.Default
+    private boolean fallback = false;
 }

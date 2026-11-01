@@ -93,6 +93,7 @@ public class AIService {
                     .academicBackground("")
                     .yearsOfExperience(0)
                     .confidenceScore(0.0)
+                    .fallback(true)
                     .build();
         }
     }
@@ -150,6 +151,7 @@ public class AIService {
                     .strengths("")
                     .gaps("")
                     .recommendation("Error in Analysis")
+                    .fallback(true)
                     .build();
         }
     }
@@ -336,6 +338,7 @@ public class AIService {
                 .academicBackground("")
                 .yearsOfExperience(0)
                 .confidenceScore(0.0)
+                .fallback(true)
                 .build();
     }
 
@@ -362,6 +365,7 @@ public class AIService {
                 .strengths("")
                 .gaps("")
                 .recommendation("Error in Analysis")
+                .fallback(true)
                 .build();
     }
 

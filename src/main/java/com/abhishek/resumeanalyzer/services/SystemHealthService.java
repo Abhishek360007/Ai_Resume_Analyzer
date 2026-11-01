@@ -211,7 +211,7 @@ public class SystemHealthService {
                         memoryUsagePercent, usedMemory / 1024 / 1024, maxMemory / 1024 / 1024));
             }
             
-            log.debug("Application health check: SUCCESS ({}ms, memory: {:.2f}%)", 
+            log.debug("Application health check: SUCCESS ({}ms, memory: {}%)", 
                     responseTime, memoryUsagePercent);
         } catch (Exception e) {
             long responseTime = System.currentTimeMillis() - startTime;

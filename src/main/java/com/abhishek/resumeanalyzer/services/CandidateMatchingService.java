@@ -8,6 +8,7 @@ import com.abhishek.resumeanalyzer.entities.CandidateMatch;
 import com.abhishek.resumeanalyzer.entities.JobRequirement;
 import com.abhishek.resumeanalyzer.entities.MatchAudit;
 import com.abhishek.resumeanalyzer.entities.ResumeEmbedding;
+import com.abhishek.resumeanalyzer.exceptions.LlmServiceException;
 import com.abhishek.resumeanalyzer.models.CandidateMatchRequest;
 import com.abhishek.resumeanalyzer.models.CandidateMatchResponse;
 import com.abhishek.resumeanalyzer.models.CandidateStatus;
@@ -90,6 +91,7 @@ public class CandidateMatchingService {
         List<CandidateMatch> matches = new ArrayList<>();
 
         try {
+            Exception lastFailure = null;
             for (Candidate candidate : allCandidates) {
                 try {
                     CandidateMatch match = matchRepository.findByCandidateIdAndJobRequirementId(
@@ -98,9 +100,16 @@ public class CandidateMatchingService {
                             .orElseGet(() -> createNewMatch(candidate, job));
                     matches.add(match);
                 } catch (Exception e) {
+                    lastFailure = e;
                     log.error("Error matching candidate {} to job {}",
                              candidate.getId(), jobRequirementId, e);
                 }
+            }
+
+            // Every candidate failed: report why instead of returning an empty "successful" run
+            if (matches.isEmpty() && lastFailure != null) {
+                throw lastFailure instanceof LlmServiceException llm ? llm
+                        : new IllegalStateException("Matching failed: " + lastFailure.getMessage(), lastFailure);
             }
 
             log.info("Matched {} candidates to job {}", matches.size(), jobRequirementId);
@@ -295,7 +304,13 @@ public class CandidateMatchingService {
                 .relevantResumeContext(buildRelevantResumeContext(candidate, job))
                 .companyImpressionsContext(buildCompanyImpressionsContext(candidate))
                 .build();
-        return aiService.matchCandidate(matchRequest);
+        CandidateMatchResponse response = aiService.matchCandidate(matchRequest);
+        if (response.isFallback()) {
+            // Never persist placeholder 0% scores as if they were a real evaluation
+            throw new LlmServiceException("AI matching is unavailable right now - check the AI provider "
+                    + "connection and API credit, then try again");
+        }
+        return response;
     }
 
     /**

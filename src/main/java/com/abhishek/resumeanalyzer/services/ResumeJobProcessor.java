@@ -2,19 +2,19 @@ package com.abhishek.resumeanalyzer.services;
 
 import com.abhishek.resumeanalyzer.entities.Candidate;
 import com.abhishek.resumeanalyzer.entities.JobQueue;
-import com.abhishek.resumeanalyzer.entities.ProcessTracker;
 import com.abhishek.resumeanalyzer.models.CandidateStatus;
 import com.abhishek.resumeanalyzer.models.EmploymentEntry;
 import com.abhishek.resumeanalyzer.models.ProcessStatus;
 import com.abhishek.resumeanalyzer.models.ResumeAnalysisRequest;
 import com.abhishek.resumeanalyzer.models.ResumeAnalysisResponse;
 import com.abhishek.resumeanalyzer.models.TrackerStatusEvent;
+import com.abhishek.resumeanalyzer.exceptions.LlmServiceException;
 import com.abhishek.resumeanalyzer.repos.CandidateRepository;
 import com.abhishek.resumeanalyzer.repos.ProcessTrackerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,19 +38,34 @@ public class ResumeJobProcessor {
     private final JobQueueService jobQueueService;
     private final TrackerEventPublisher trackerEventPublisher;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final TransactionTemplate transactionTemplate;
 
     /**
      * Process a resume job from the queue.
-     * 
+     *
+     * <p>All work runs in one transaction, so a failure part-way through (e.g. the
+     * embedding call) leaves no half-created candidate behind. Failure bookkeeping
+     * runs only after that transaction has rolled back; recording it inside the
+     * doomed transaction would roll it back too and leave the job stuck in PROCESSING.</p>
+     *
      * @param job The job to process
      */
-    @Transactional
     public void processJob(JobQueue job) {
         UUID jobId = job.getId();
         log.info("Starting resume job processing: jobId={}, priority={}, retryCount={}", 
                  jobId, job.getPriority(), job.getRetryCount());
 
         try {
+            transactionTemplate.executeWithoutResult(status -> processInTransaction(job));
+        } catch (Exception e) {
+            log.error("Error processing resume job: jobId={}, error={}", jobId, e.getMessage(), e);
+            handleJobFailure(job, e);
+        }
+    }
+
+    private void processInTransaction(JobQueue job) {
+        UUID jobId = job.getId();
+        {
             // Extract metadata
             Map<String, Object> metadata = job.getMetadata();
             if (metadata == null) {
@@ -70,21 +85,24 @@ public class ResumeJobProcessor {
             log.info("Processing resume job: jobId={}, filename={}, trackerId={}, dataSize={} bytes", 
                      jobId, filename, trackerId, fileData != null ? fileData.length : 0);
 
-            // Get process tracker
-            ProcessTracker tracker = trackerRepository.findById(trackerId)
-                    .orElseThrow(() -> new IllegalArgumentException("Tracker not found: " + trackerId));
-
-            // Link job to tracker
-            tracker.setJobId(jobId);
-            tracker.setCorrelationId(job.getCorrelationId());
-            trackerRepository.save(tracker);
+            // Link job to tracker. Tracker writes are atomic queries rather than entity saves:
+            // several workers update the same batch tracker concurrently, and saving a stale
+            // entity copy would overwrite the processed/failed counters written by the others.
+            if (trackerRepository.linkJob(trackerId, jobId, job.getCorrelationId()) == 0) {
+                throw new IllegalArgumentException("Tracker not found: " + trackerId);
+            }
 
             // Send heartbeat before starting
             jobQueueService.updateHeartbeat(jobId);
 
             // Step 1: Extract text from file
             log.debug("Extracting text from resume: jobId={}, filename={}", jobId, filename);
-            String resumeContent = fileParserService.extractText(fileData, filename);
+            String resumeContent;
+            try {
+                resumeContent = fileParserService.extractText(fileData, filename);
+            } catch (java.io.IOException e) {
+                throw new java.io.UncheckedIOException(e);
+            }
             log.info("Text extraction complete: jobId={}, contentLength={} chars", 
                      jobId, resumeContent.length());
 
@@ -99,13 +117,16 @@ public class ResumeJobProcessor {
                     .build();
 
             ResumeAnalysisResponse analysisResponse = aiService.analyzeResume(analysisRequest);
+            if (analysisResponse.isFallback()) {
+                // Never save an "Unknown" placeholder candidate; let the job retry and then fail visibly
+                throw new LlmServiceException("AI analysis unavailable for " + filename
+                        + " - check the AI provider connection and API credit");
+            }
             log.info("AI analysis complete: jobId={}, candidateName={}, skillsPresent={}", 
                      jobId, analysisResponse.getName(), 
                      analysisResponse.getSkills() != null && !analysisResponse.getSkills().isEmpty());
 
-            tracker.updateStatus(ProcessStatus.RESUME_ANALYZED, "Resume analyzed");
-            trackerRepository.save(tracker);
-            trackerEventPublisher.publish(tracker, TrackerStatusEvent.TYPE_UPDATE);
+            reportStage(trackerId, ProcessStatus.RESUME_ANALYZED, "Resume analyzed: " + filename);
 
             // Send heartbeat after AI analysis
             jobQueueService.updateHeartbeat(jobId);
@@ -145,13 +166,7 @@ public class ResumeJobProcessor {
             log.info("Embeddings generated and stored: jobId={}, candidateId={}", 
                      jobId, candidate.getId());
 
-            tracker.updateStatus(ProcessStatus.EMBED_GENERATED, "Embeddings generated");
-            trackerRepository.save(tracker);
-            trackerEventPublisher.publish(tracker, TrackerStatusEvent.TYPE_UPDATE);
-
-            tracker.updateStatus(ProcessStatus.VECTOR_DB_UPDATED, "Vector database updated");
-            trackerRepository.save(tracker);
-            trackerEventPublisher.publish(tracker, TrackerStatusEvent.TYPE_UPDATE);
+            reportStage(trackerId, ProcessStatus.VECTOR_DB_UPDATED, "Search index updated: " + filename);
 
             // Prepare result metadata
             Map<String, Object> result = new HashMap<>();
@@ -176,10 +191,12 @@ public class ResumeJobProcessor {
                      job.getStartedAt() != null ? 
                          java.time.Duration.between(job.getStartedAt(), java.time.LocalDateTime.now()).getSeconds() : 0);
 
-        } catch (Exception e) {
-            log.error("Error processing resume job: jobId={}, error={}", jobId, e.getMessage(), e);
-            handleJobFailure(job, e);
         }
+    }
+
+    private void reportStage(UUID trackerId, ProcessStatus status, String message) {
+        trackerRepository.updateStage(trackerId, status, message);
+        publishTracker(trackerId, TrackerStatusEvent.TYPE_UPDATE);
     }
 
     /**
@@ -190,7 +207,7 @@ public class ResumeJobProcessor {
      */
     private void publishTracker(UUID trackerId, String eventType) {
         try {
-            trackerRepository.findById(trackerId)
+            trackerRepository.findCurrentById(trackerId)
                     .ifPresent(tracker -> trackerEventPublisher.publish(tracker, eventType));
         } catch (Exception e) {
             log.warn("Failed to publish tracker event {} for {}: {}", eventType, trackerId, e.getMessage());

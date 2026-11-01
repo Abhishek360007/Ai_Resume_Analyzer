@@ -1,5 +1,6 @@
 package com.abhishek.resumeanalyzer.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -84,4 +85,12 @@ public class ResumeAnalysisResponse {
      * Twitter / X profile URL found in the resume, if any.
      */
     private String twitterUrl;
+
+    /**
+     * True when this is a placeholder produced because the LLM call failed,
+     * so callers must not persist it as a real result.
+     */
+    @JsonIgnore
+    @Builder.Default
+    private boolean fallback = false;
 }

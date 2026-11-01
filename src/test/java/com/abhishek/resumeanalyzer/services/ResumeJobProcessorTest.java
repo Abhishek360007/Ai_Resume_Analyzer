@@ -12,6 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.*;
@@ -46,6 +49,11 @@ class ResumeJobProcessorTest {
 
     @Mock
     private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
+    // Runs the callback inline, like a real transaction that commits or rolls back
+    @Spy
+    private TransactionTemplate transactionTemplate =
+            new TransactionTemplate(mock(PlatformTransactionManager.class));
 
     @InjectMocks
     private ResumeJobProcessor resumeJobProcessor;
@@ -94,8 +102,7 @@ class ResumeJobProcessorTest {
     @Test
     void testProcessJob_Success() throws Exception {
         // Arrange
-        when(trackerRepository.findById(trackerId)).thenReturn(Optional.of(mockTracker));
-        when(trackerRepository.save(any(ProcessTracker.class))).thenReturn(mockTracker);
+        when(trackerRepository.linkJob(trackerId, jobId, "test-correlation-id")).thenReturn(1);
 
         when(fileParserService.extractText(testFileData, "test-resume.pdf"))
                 .thenReturn(testResumeContent);
@@ -116,15 +123,18 @@ class ResumeJobProcessorTest {
         resumeJobProcessor.processJob(mockJob);
 
         // Assert
-        verify(trackerRepository, atLeast(1)).findById(trackerId);
+        verify(trackerRepository).linkJob(trackerId, jobId, "test-correlation-id");
         verify(fileParserService).extractText(testFileData, "test-resume.pdf");
         verify(aiService).analyzeResume(any(ResumeAnalysisRequest.class));
         verify(candidateRepository).save(any(Candidate.class));
         verify(embeddingService).generateAndStoreEmbeddings(any(Candidate.class), eq(testResumeContent));
         verify(jobQueueService, atLeast(3)).updateHeartbeat(jobId);
         verify(jobQueueService).markJobCompleted(eq(jobId), anyMap());
-        verify(trackerRepository, atLeast(3)).save(any(ProcessTracker.class));
+        verify(trackerRepository).updateStage(eq(trackerId), eq(ProcessStatus.RESUME_ANALYZED), anyString());
+        verify(trackerRepository).updateStage(eq(trackerId), eq(ProcessStatus.VECTOR_DB_UPDATED), anyString());
         verify(trackerRepository).recordProcessedFile(eq(trackerId), eq(ProcessStatus.COMPLETED), anyString());
+        // Whole-entity saves would overwrite counters written concurrently by other workers
+        verify(trackerRepository, never()).save(any(ProcessTracker.class));
     }
 
     @Test
@@ -158,24 +168,41 @@ class ResumeJobProcessorTest {
     }
 
     @Test
-    @Disabled("Implementation uses error handling instead of throwing IllegalArgumentException for tracker not found")
     void testProcessJob_TrackerNotFound() {
         // Arrange
-        when(trackerRepository.findById(trackerId)).thenReturn(Optional.empty());
+        when(trackerRepository.linkJob(trackerId, jobId, "test-correlation-id")).thenReturn(0);
 
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
-            resumeJobProcessor.processJob(mockJob);
-        });
+        // Act
+        resumeJobProcessor.processJob(mockJob);
 
-        verify(jobQueueService).markJobFailed(eq(jobId), anyString(), anyBoolean());
+        // Assert: a missing tracker can never succeed, so the job fails without retrying
+        verify(jobQueueService).markJobFailed(eq(jobId), contains("Tracker not found"), eq(false));
+        verifyNoInteractions(fileParserService, aiService, candidateRepository);
+    }
+
+    @Test
+    void testProcessJob_AIFallback_DoesNotSavePlaceholderCandidate() throws Exception {
+        // Arrange
+        when(trackerRepository.linkJob(trackerId, jobId, "test-correlation-id")).thenReturn(1);
+        when(fileParserService.extractText(testFileData, "test-resume.pdf"))
+                .thenReturn(testResumeContent);
+        when(aiService.analyzeResume(any(ResumeAnalysisRequest.class)))
+                .thenReturn(ResumeAnalysisResponse.builder().name("Unknown").fallback(true).build());
+
+        // Act
+        resumeJobProcessor.processJob(mockJob);
+
+        // Assert
+        verify(candidateRepository, never()).save(any(Candidate.class));
+        verify(embeddingService, never()).generateAndStoreEmbeddings(any(), anyString());
+        verify(jobQueueService).markJobFailed(eq(jobId), contains("AI analysis unavailable"), eq(true));
+        verify(trackerRepository).updateTrackerMessage(eq(trackerId), contains("will retry"));
     }
 
     @Test
     void testProcessJob_FileParsingError() throws Exception {
         // Arrange
-        when(trackerRepository.findById(trackerId)).thenReturn(Optional.of(mockTracker));
-        when(trackerRepository.save(any(ProcessTracker.class))).thenReturn(mockTracker);
+        when(trackerRepository.linkJob(trackerId, jobId, "test-correlation-id")).thenReturn(1);
 
         when(fileParserService.extractText(testFileData, "test-resume.pdf"))
                 .thenThrow(new RuntimeException("Unsupported file format"));
@@ -189,15 +216,14 @@ class ResumeJobProcessorTest {
         // Assert
         verify(fileParserService).extractText(testFileData, "test-resume.pdf");
         verify(jobQueueService).markJobFailed(eq(jobId), contains("Unsupported file format"), eq(false));
-        verify(trackerRepository, atLeast(1)).save(any(ProcessTracker.class));
+        verify(trackerRepository, never()).save(any(ProcessTracker.class));
         verify(trackerRepository).recordFailedFile(eq(trackerId), eq(ProcessStatus.FAILED), contains("Unsupported file format"));
     }
 
     @Test
     void testProcessJob_AIServiceError() throws Exception {
         // Arrange
-        when(trackerRepository.findById(trackerId)).thenReturn(Optional.of(mockTracker));
-        when(trackerRepository.save(any(ProcessTracker.class))).thenReturn(mockTracker);
+        when(trackerRepository.linkJob(trackerId, jobId, "test-correlation-id")).thenReturn(1);
 
         when(fileParserService.extractText(testFileData, "test-resume.pdf"))
                 .thenReturn(testResumeContent);
@@ -220,8 +246,7 @@ class ResumeJobProcessorTest {
     @Test
     void testProcessJob_EmbeddingError() throws Exception {
         // Arrange
-        when(trackerRepository.findById(trackerId)).thenReturn(Optional.of(mockTracker));
-        when(trackerRepository.save(any(ProcessTracker.class))).thenReturn(mockTracker);
+        when(trackerRepository.linkJob(trackerId, jobId, "test-correlation-id")).thenReturn(1);
 
         when(fileParserService.extractText(testFileData, "test-resume.pdf"))
                 .thenReturn(testResumeContent);
@@ -251,8 +276,7 @@ class ResumeJobProcessorTest {
     @Test
     void testProcessJob_RetryableError() throws Exception {
         // Arrange
-        when(trackerRepository.findById(trackerId)).thenReturn(Optional.of(mockTracker));
-        when(trackerRepository.save(any(ProcessTracker.class))).thenReturn(mockTracker);
+        when(trackerRepository.linkJob(trackerId, jobId, "test-correlation-id")).thenReturn(1);
 
         when(fileParserService.extractText(testFileData, "test-resume.pdf"))
                 .thenThrow(new java.net.SocketTimeoutException("Connection timeout"));
@@ -273,8 +297,7 @@ class ResumeJobProcessorTest {
         // Arrange
         mockJob.setRetryCount(3);
 
-        when(trackerRepository.findById(trackerId)).thenReturn(Optional.of(mockTracker));
-        when(trackerRepository.save(any(ProcessTracker.class))).thenReturn(mockTracker);
+        when(trackerRepository.linkJob(trackerId, jobId, "test-correlation-id")).thenReturn(1);
 
         when(fileParserService.extractText(testFileData, "test-resume.pdf"))
                 .thenThrow(new java.net.SocketTimeoutException("Connection timeout"));
@@ -294,8 +317,7 @@ class ResumeJobProcessorTest {
     @Test
     void testProcessJob_NonRetryableError() throws Exception {
         // Arrange
-        when(trackerRepository.findById(trackerId)).thenReturn(Optional.of(mockTracker));
-        when(trackerRepository.save(any(ProcessTracker.class))).thenReturn(mockTracker);
+        when(trackerRepository.linkJob(trackerId, jobId, "test-correlation-id")).thenReturn(1);
 
         when(fileParserService.extractText(testFileData, "test-resume.pdf"))
                 .thenThrow(new IllegalArgumentException("Invalid file data"));
@@ -315,8 +337,7 @@ class ResumeJobProcessorTest {
     @Test
     void testProcessJob_UpdatesTracker() throws Exception {
         // Arrange
-        when(trackerRepository.findById(trackerId)).thenReturn(Optional.of(mockTracker));
-        when(trackerRepository.save(any(ProcessTracker.class))).thenReturn(mockTracker);
+        when(trackerRepository.linkJob(trackerId, jobId, "test-correlation-id")).thenReturn(1);
 
         when(fileParserService.extractText(testFileData, "test-resume.pdf"))
                 .thenReturn(testResumeContent);
@@ -337,10 +358,8 @@ class ResumeJobProcessorTest {
         resumeJobProcessor.processJob(mockJob);
 
         // Assert
-        verify(trackerRepository, atLeast(1)).findById(trackerId);
-        verify(trackerRepository, atLeast(1)).save(argThat(tracker -> 
-            tracker.getJobId() != null && tracker.getJobId().equals(jobId)
-        ));
+        verify(trackerRepository).linkJob(trackerId, jobId, "test-correlation-id");
+        verify(trackerRepository, never()).save(any(ProcessTracker.class));
     }
 
     // Helper methods

@@ -9,8 +9,13 @@ spring:
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      # Resume workers each hold a connection for a job, plus brief progress updates
+      maximum-pool-size: ${DB_POOL_SIZE:15}
   
   jpa:
+    # Built-in OSIV is replaced by OpenEntityManagerInViewConfig, which skips the SSE stream
+    open-in-view: false
     hibernate:
       ddl-auto: none
     show-sql: false
@@ -48,6 +53,13 @@ spring:
         enabled: true
   
   ai:
+    # Fail fast when the AI provider is down; the job queue has its own retries
+    retry:
+      max-attempts: 3
+      backoff:
+        initial-interval: 2s
+        multiplier: 2
+        max-interval: 10s
     openai:
       base-url: ${LLM_STUDIO_BASE_URL:http://localhost:1234}
       api-key: ${LLM_STUDIO_API_KEY:not-needed}
@@ -80,7 +92,7 @@ app:
     provider-name: ${LLM_PROVIDER_NAME:LM Studio}
   upload:
     directory: ${UPLOAD_DIR:./uploads}
-    allowed-extensions: .doc,.docx,.pdf
+    allowed-extensions: .doc,.docx,.pdf,.txt
   
   embedding:
     dimension: 768
@@ -167,7 +179,8 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        # metrics would leak JVM and route details: /actuator is reachable without login
+        include: health,info
       base-path: /actuator
   endpoint:
     health:

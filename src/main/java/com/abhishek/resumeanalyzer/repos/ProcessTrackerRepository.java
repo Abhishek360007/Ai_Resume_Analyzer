@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -68,6 +70,7 @@ public interface ProcessTrackerRepository extends JpaRepository<ProcessTracker, 
      * @return the number of rows updated (1 if the tracker exists)
      */
     @Modifying
+    @Transactional
     @Query("""
             UPDATE ProcessTracker t SET
               t.status = CASE WHEN COALESCE(t.processedFiles, 0) + 1 + COALESCE(t.failedFiles, 0) >= COALESCE(t.totalFiles, 0)
@@ -93,6 +96,7 @@ public interface ProcessTrackerRepository extends JpaRepository<ProcessTracker, 
      * @return the number of rows updated (1 if the tracker exists)
      */
     @Modifying
+    @Transactional
     @Query("""
             UPDATE ProcessTracker t SET
               t.status = CASE WHEN COALESCE(t.processedFiles, 0) + COALESCE(t.failedFiles, 0) + 1 >= COALESCE(t.totalFiles, 0)
@@ -117,6 +121,7 @@ public interface ProcessTrackerRepository extends JpaRepository<ProcessTracker, 
      * @return the number of rows updated (1 if the tracker exists)
      */
     @Modifying
+    @Transactional
     @Query("""
             UPDATE ProcessTracker t SET
               t.message = :message,
@@ -124,4 +129,58 @@ public interface ProcessTrackerRepository extends JpaRepository<ProcessTracker, 
             WHERE t.id = :trackerId
             """)
     int updateTrackerMessage(@Param("trackerId") UUID trackerId, @Param("message") String message);
+
+    /*
+     * The methods below run in their own short transaction (REQUIRES_NEW) because they are
+     * called from inside a long-running resume job: they must be visible to the UI right away,
+     * and must not hold the shared tracker row lock while the job waits on the AI provider.
+     */
+
+    /**
+     * Record which job and correlation id last touched the tracker, without rewriting counters.
+     *
+     * @return the number of rows updated
+     */
+    @Modifying
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Query("""
+            UPDATE ProcessTracker t SET
+              t.jobId = :jobId,
+              t.correlationId = :correlationId,
+              t.updatedAt = CURRENT_TIMESTAMP
+            WHERE t.id = :trackerId
+            """)
+    int linkJob(@Param("trackerId") UUID trackerId,
+                @Param("jobId") UUID jobId,
+                @Param("correlationId") String correlationId);
+
+    /**
+     * Report an intermediate processing stage. Only status and message change, so per-file
+     * counters written concurrently by other workers are never overwritten, and a batch that
+     * has already finished keeps its final status.
+     *
+     * @return the number of rows updated (0 if the batch already completed or failed)
+     */
+    @Modifying
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Query("""
+            UPDATE ProcessTracker t SET
+              t.status = :status,
+              t.message = :message,
+              t.updatedAt = CURRENT_TIMESTAMP
+            WHERE t.id = :trackerId
+              AND t.status NOT IN (com.abhishek.resumeanalyzer.models.ProcessStatus.COMPLETED,
+                                   com.abhishek.resumeanalyzer.models.ProcessStatus.FAILED)
+            """)
+    int updateStage(@Param("trackerId") UUID trackerId,
+                    @Param("status") ProcessStatus status,
+                    @Param("message") String message);
+
+    /**
+     * Read the tracker as currently committed, bypassing any stale copy cached in the
+     * caller's persistence context.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+    @Query("SELECT t FROM ProcessTracker t WHERE t.id = :trackerId")
+    Optional<ProcessTracker> findCurrentById(@Param("trackerId") UUID trackerId);
 }

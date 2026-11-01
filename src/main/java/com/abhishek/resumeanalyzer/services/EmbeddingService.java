@@ -1,5 +1,6 @@
 package com.abhishek.resumeanalyzer.services;
 
+import com.abhishek.resumeanalyzer.exceptions.LlmServiceException;
 import com.abhishek.resumeanalyzer.entities.Candidate;
 import com.abhishek.resumeanalyzer.entities.ResumeEmbedding;
 import com.abhishek.resumeanalyzer.repos.ResumeEmbeddingRepository;
@@ -110,6 +111,22 @@ public class EmbeddingService {
      * Tries embedForResponse first, falls back to per-text embed() on failure.
      */
     private List<float[]> generateEmbeddingsWithFallback(List<String> texts) {
+        return requireVectors(texts.size(), embedWithFallback(texts));
+    }
+
+    /**
+     * Reject empty or missing vectors so a misconfigured embedding model fails the job
+     * with a clear message instead of an index error or silently useless search data.
+     */
+    private List<float[]> requireVectors(int expected, List<float[]> vectors) {
+        if (vectors.size() != expected || vectors.stream().anyMatch(v -> v == null || v.length == 0)) {
+            throw new LlmServiceException("Embedding provider returned " + vectors.size() + " usable vector(s) for "
+                    + expected + " text(s) - check the embedding model configuration");
+        }
+        return vectors;
+    }
+
+    private List<float[]> embedWithFallback(List<String> texts) {
         try {
             EmbeddingResponse response = embeddingModel.embedForResponse(texts);
             return response.getResults().stream()
@@ -124,8 +141,8 @@ public class EmbeddingService {
                     float[] vec = embeddingModel.embed(text);
                     results.add(vec);
                 } catch (Exception inner) {
-                    log.warn("embed() also failed for text, using zero vector: {}", inner.getMessage());
-                    results.add(new float[768]);
+                    // A zero vector would silently corrupt semantic search, so fail and let the job retry
+                    throw new LlmServiceException("Embedding generation failed: " + inner.getMessage(), inner);
                 }
             }
             return results;
