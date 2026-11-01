@@ -1,0 +1,81 @@
+# Minimal local stack: PostgreSQL (with pgvector) + Resume Analyzer app.
+# Usage: docker compose up --build
+# The app talks to an external LLM Studio endpoint (default: host.docker.internal:1234).
+
+services:
+  # PostgreSQL database with pgvector extension
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: resume-analyzer-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-resume_analyzer}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-resume_analyzer}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - resume-analyzer-network
+
+  # Resume Analyzer Application
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: resume-analyzer-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database configuration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-resume_analyzer}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
+
+      # LLM Studio configuration
+      LLM_STUDIO_BASE_URL: ${LLM_STUDIO_BASE_URL:-http://host.docker.internal:1234}
+      LLM_STUDIO_API_KEY: ${LLM_STUDIO_API_KEY:-sk-lm-qetrGQun:QqqQOHpvnMUbonilIAZE}
+      LLM_STUDIO_MODEL: ${LLM_STUDIO_MODEL:-mistralai/ministral-3-14b-reasoning}
+      LLM_STUDIO_EMBEDDING_MODEL: ${LLM_STUDIO_EMBEDDING_MODEL:-text-embedding-nomic-embed-text-v1.5}
+
+      # Application configuration
+      SERVER_PORT: 8080
+      UPLOAD_DIR: /app/uploads
+      JAVA_OPTS: "-Xmx1g -Xms512m"
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - app_uploads:/app/uploads
+      - app_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    networks:
+      - resume-analyzer-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  resume-analyzer-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  app_uploads:
+    driver: local
+  app_logs:
+    driver: local

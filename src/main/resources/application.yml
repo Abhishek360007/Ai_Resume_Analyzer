@@ -1,0 +1,186 @@
+spring:
+  config:
+    import: "optional:classpath:ai-prompts.yml"
+  application:
+    name: resume-analyzer
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/resume_analyzer
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+  # Flyway owns the schema. Migrations live in db/migration (V1 = schema,
+  # V2 = seed data). baseline-on-migrate lets existing pre-Flyway databases
+  # (tables created by the old ddl-auto: update) be baselined at V1 instead
+  # of wiped; V2 seeds are idempotent and run on both fresh and legacy DBs.
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    locations: classpath:db/migration
+  
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 100MB
+  
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+    path: /graphql
+    schema:
+      printer:
+        enabled: true
+  
+  ai:
+    openai:
+      base-url: ${LLM_STUDIO_BASE_URL:http://localhost:1234}
+      api-key: ${LLM_STUDIO_API_KEY:sk-lm-qetrGQun:QqqQOHpvnMUbonilIAZE}
+      chat:
+        options:
+          model: ${LLM_STUDIO_MODEL:mistralai/mistral-7b-instruct-v0.3}
+          temperature: 0.7
+          max-tokens: 4000
+      embedding:
+        options:
+          model: ${LLM_STUDIO_EMBEDDING_MODEL:text-embedding-nomic-embed-text-v1.5}
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:YourSecretKeyMustBeAtLeast256BitsLongForHS256AlgorithmToWorkProperlyPleaseChangeThisInProduction}
+  access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}  # 15 minutes
+  refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}  # 7 days
+  sse-token-expiration-ms: ${JWT_SSE_TOKEN_EXPIRATION:60000}  # 60 seconds
+
+# Application AI Configuration
+ai:
+  llm:
+    timeout: 120000
+    retry-attempts: 3
+
+# Application Configuration
+app:
+  upload:
+    directory: ${UPLOAD_DIR:./uploads}
+    allowed-extensions: .doc,.docx,.pdf
+  
+  embedding:
+    dimension: 768
+    batch-size: 10
+  
+  processing:
+    thread-pool-size: 5
+    max-retries: 3
+
+  # External Profile Enrichment Configuration
+  enrichment:
+    github:
+      # Set GITHUB_API_TOKEN for authenticated access (5 000 req/hour vs 60 anonymous)
+      token: ${GITHUB_API_TOKEN:}
+    twitter:
+      # Set TWITTER_BEARER_TOKEN to enable Twitter/X profile enrichment
+      # Obtain from https://developer.twitter.com/en/portal/dashboard
+      bearer-token: ${TWITTER_BEARER_TOKEN:}
+    tavily:
+      # Set TAVILY_API_KEY to enable real web-search in the INTERNET_SEARCH enricher
+      # Obtain from https://app.tavily.com
+      api-key: ${TAVILY_API_KEY:}
+    # Profiles older than this many days are auto-refreshed before a match request
+    staleness-ttl-days: ${ENRICHMENT_STALENESS_TTL:7}
+    # When true an extra LLM call selects the most relevant sources before each match
+    source-selection-enabled: ${ENRICHMENT_SOURCE_SELECTION:false}
+    multi-pass:
+      # Re-match borderline candidates after auto-enrichment
+      enabled: ${ENRICHMENT_MULTI_PASS:true}
+      borderline-min: 50
+      borderline-max: 75
+
+  # Apache Pekko Processing Configuration
+  # Resume uploads are enqueued to the job_queue table and consumed by a Pekko
+  # actor/stream pipeline (see com.abhishek.resumeanalyzer.pekko).
+  pekko:
+    enabled: ${PEKKO_ENABLED:true}  # Master switch for the Pekko pipeline
+    actor-system-name: resume-analyzer
+    worker-count: ${PEKKO_WORKERS:5}  # Number of worker actors processing jobs in parallel
+    poll-interval-ms: ${PEKKO_POLL_INTERVAL:5000}  # How often the polling stream checks for jobs (5 seconds)
+    initial-delay-ms: ${PEKKO_INITIAL_DELAY:10000}  # Wait before first poll (10 seconds)
+    claim-batch-size: ${PEKKO_CLAIM_BATCH:5}  # Max jobs to claim per poll
+    mailbox-capacity: ${PEKKO_MAILBOX_CAPACITY:100}  # Bound on outstanding buffered jobs (backpressure)
+    worker-id: ${PEKKO_WORKER_ID:worker-1}  # Unique ID for this worker instance
+    stale-job-threshold-minutes: ${PEKKO_STALE_THRESHOLD:15}  # Jobs without heartbeat for 15 min = stale
+    stale-check-interval-ms: ${PEKKO_STALE_CHECK_INTERVAL:60000}  # Check for stale jobs every minute
+    cleanup-cron: ${PEKKO_CLEANUP_CRON:0 0 2 * * ?}  # Cleanup old jobs daily at 2 AM
+    cleanup-retention-days: ${PEKKO_CLEANUP_RETENTION:30}  # Keep completed jobs for 30 days
+    metrics-log-interval-ms: ${PEKKO_METRICS_INTERVAL:300000}  # Log metrics every 5 minutes
+
+# Server Configuration
+server:
+  port: 8080
+  compression:
+    enabled: true
+    mime-types: 
+      - text/html
+      - text/xml
+      - text/plain
+      - text/css
+      - text/javascript
+      - application/javascript
+      - application/json
+    min-response-size: 1024
+
+# Logging Configuration
+logging:
+  level:
+    com.abhishek.resumeanalyzer: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/resume-analyzer.log
+    max-size: 10MB
+    max-history: 30
+
+# Spring Boot Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      enabled: true
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    db:
+      enabled: true
+  info:
+    env:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
