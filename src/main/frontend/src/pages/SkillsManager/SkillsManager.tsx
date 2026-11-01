@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { graphqlClient, GET_ALL_SKILLS, CREATE_SKILL, UPDATE_SKILL, DELETE_SKILL } from '@/services/graphql'
 import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog'
 import styles from './SkillsManager.module.css'
+import { getErrorMessage } from '@/utils/errorMessage'
 
 interface Skill {
   id: string
@@ -49,7 +50,7 @@ const SkillsManager = () => {
       const data: { allSkills: Skill[] } = await graphqlClient.request(GET_ALL_SKILLS)
       setSkills(data.allSkills)
     } catch (err) {
-      setError('Failed to load skills')
+      setError(getErrorMessage(err, 'Failed to load skills'))
       console.error('Error fetching skills:', err)
     } finally {
       setLoading(false)
@@ -98,7 +99,7 @@ const SkillsManager = () => {
       setSkills(skills.map(s => s.id === editingId ? data.updateSkill : s))
       handleCancelEdit()
     } catch (err) {
-      setError('Failed to update skill')
+      setError(getErrorMessage(err, 'Failed to update skill'))
       console.error('Error updating skill:', err)
     } finally {
       setLoading(false)
@@ -144,7 +145,7 @@ const SkillsManager = () => {
       setSkills([...skills, data.createSkill])
       handleCancelAdd()
     } catch (err) {
-      setError('Failed to create skill. Skill may already exist.')
+      setError(getErrorMessage(err, 'Failed to create skill'))
       console.error('Error creating skill:', err)
     } finally {
       setLoading(false)
@@ -160,7 +161,7 @@ const SkillsManager = () => {
       await graphqlClient.request(DELETE_SKILL, { id })
       setSkills(skills.filter(s => s.id !== id))
     } catch (err) {
-      setError('Failed to delete skill')
+      setError(getErrorMessage(err, 'Failed to delete skill'))
       console.error('Error deleting skill:', err)
     } finally {
       setLoading(false)

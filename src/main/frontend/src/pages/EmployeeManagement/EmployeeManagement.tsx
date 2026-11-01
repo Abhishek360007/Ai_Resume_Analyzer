@@ -14,6 +14,7 @@ import {
   ALL_DEPARTMENTS,
 } from '@/graphql/employeeQueries'
 import styles from './EmployeeManagement.module.css'
+import { getErrorMessage } from '@/utils/errorMessage'
 
 enum EmploymentType {
   FULL_TIME = 'FULL_TIME',
@@ -135,7 +136,7 @@ export default function EmployeeManagement() {
       const result = await graphqlClient.request<{ allEmployees: Employee[] }>(ALL_EMPLOYEES)
       setEmployees(result.allEmployees)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load employees')
+      setError(getErrorMessage(err, 'Failed to load employees'))
     } finally {
       setLoading(false)
     }
@@ -205,7 +206,7 @@ export default function EmployeeManagement() {
       })
       fetchEmployees()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to create employee')
+      alert(getErrorMessage(err, 'Failed to create employee'))
     }
   }
 
@@ -235,7 +236,7 @@ export default function EmployeeManagement() {
       setSelectedEmployee(null)
       fetchEmployees()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to update employee')
+      alert(getErrorMessage(err, 'Failed to update employee'))
     }
   }
 
@@ -254,7 +255,7 @@ export default function EmployeeManagement() {
       setTerminationDate('')
       fetchEmployees()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to terminate employee')
+      alert(getErrorMessage(err, 'Failed to terminate employee'))
     }
   }
 
@@ -268,7 +269,7 @@ export default function EmployeeManagement() {
       setSelectedEmployee(null)
       fetchEmployees()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete employee')
+      alert(getErrorMessage(err, 'Failed to delete employee'))
     }
   }
 

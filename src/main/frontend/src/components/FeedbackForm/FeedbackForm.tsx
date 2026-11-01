@@ -7,6 +7,7 @@ import { useState, FormEvent } from 'react'
 import { graphqlClient } from '@/services/graphql'
 import { SUBMIT_FEEDBACK } from '@/graphql/feedbackQueries'
 import styles from './FeedbackForm.module.css'
+import { getErrorMessage } from '@/utils/errorMessage'
 
 export enum FeedbackType {
   SHORTLIST = 'SHORTLIST',
@@ -59,7 +60,7 @@ export default function FeedbackForm({
       })
       onSuccess()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit feedback')
+      setError(getErrorMessage(err, 'Failed to submit feedback'))
     } finally {
       setIsSubmitting(false)
     }

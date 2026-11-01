@@ -23,6 +23,7 @@ import {
   REMOVE_SAMPLE_JOBS,
 } from '@/services/graphql'
 import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog'
+import { getErrorMessage } from '@/utils/errorMessage'
 import styles from './JobRequirements.module.css'
 
 const JobRequirements = () => {
@@ -157,15 +158,12 @@ const JobRequirements = () => {
       }
     } catch (error) {
       setSampleError(
-        `Failed to ${action === 'load' ? 'load' : 'remove'} sample jobs: ${errorMessage(error)}`
+        `Failed to ${action === 'load' ? 'load' : 'remove'} sample jobs: ${getErrorMessage(error)}`
       )
     } finally {
       setSampleLoading(false)
     }
   }
-
-  const errorMessage = (error: unknown) =>
-    error instanceof Error ? error.message : String(error)
 
   const handleOpenFeedback = (jobId: string) => {
     setSelectedJobId(jobId)

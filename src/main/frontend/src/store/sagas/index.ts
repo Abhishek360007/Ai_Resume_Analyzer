@@ -36,6 +36,7 @@ import type { CandidateMatch } from '@store/slices/matchesSlice'
 import type { ProcessTracker } from '@store/slices/uploadSlice'
 import type { CandidateExternalProfile, ExternalProfileSource } from '@store/slices/enrichmentSlice'
 import type { PendingCandidate } from '@store/slices/confirmationSlice'
+import { getErrorMessage } from '@/utils/errorMessage'
 
 // Helper to call graphql client with automatic token refresh on UNAUTHORIZED
 const gqlRequest = (query: any, variables?: any) => gqlRequestWithRefresh(query, variables)
@@ -56,7 +57,7 @@ function* fetchCandidatesSaga() {
     )
     yield put(candidatesActions.fetchCandidatesSuccess(data.allCandidates))
   } catch (error: any) {
-    yield put(candidatesActions.fetchCandidatesFailure(error.message))
+    yield put(candidatesActions.fetchCandidatesFailure(getErrorMessage(error)))
   }
 }
 
@@ -69,7 +70,7 @@ function* searchCandidatesByNameSaga(action: PayloadAction<string>) {
     )
     yield put(candidatesActions.fetchCandidatesSuccess(data.searchCandidatesByName))
   } catch (error: any) {
-    yield put(candidatesActions.fetchCandidatesFailure(error.message))
+    yield put(candidatesActions.fetchCandidatesFailure(getErrorMessage(error)))
   }
 }
 
@@ -82,7 +83,7 @@ function* searchCandidatesBySkillSaga(action: PayloadAction<string>) {
     )
     yield put(candidatesActions.fetchCandidatesSuccess(data.searchCandidatesBySkill))
   } catch (error: any) {
-    yield put(candidatesActions.fetchCandidatesFailure(error.message))
+    yield put(candidatesActions.fetchCandidatesFailure(getErrorMessage(error)))
   }
 }
 
@@ -91,7 +92,7 @@ function* deleteCandidateSaga(action: PayloadAction<string>) {
     yield call(gqlRequest, DELETE_CANDIDATE, { id: action.payload })
     yield put(candidatesActions.deleteCandidateSuccess(action.payload))
   } catch (error: any) {
-    yield put(candidatesActions.fetchCandidatesFailure(error.message))
+    yield put(candidatesActions.fetchCandidatesFailure(getErrorMessage(error)))
   }
 }
 
@@ -121,7 +122,7 @@ function* fetchJobsSaga() {
     )
     yield put(jobsActions.fetchJobsSuccess(data.allJobRequirements))
   } catch (error: any) {
-    yield put(jobsActions.fetchJobsFailure(error.message))
+    yield put(jobsActions.fetchJobsFailure(getErrorMessage(error)))
   }
 }
 
@@ -134,7 +135,7 @@ function* createJobSaga(action: PayloadAction<Omit<JobRequirement, 'id' | 'creat
     )
     yield put(jobsActions.createJobSuccess(data.createJobRequirement))
   } catch (error: any) {
-    yield put(jobsActions.fetchJobsFailure(error.message))
+    yield put(jobsActions.fetchJobsFailure(getErrorMessage(error)))
   }
 }
 
@@ -147,7 +148,7 @@ function* updateJobSaga(action: PayloadAction<JobRequirement>) {
     )
     yield put(jobsActions.updateJobSuccess(data.updateJobRequirement))
   } catch (error: any) {
-    yield put(jobsActions.fetchJobsFailure(error.message))
+    yield put(jobsActions.fetchJobsFailure(getErrorMessage(error)))
   }
 }
 
@@ -156,7 +157,7 @@ function* deleteJobSaga(action: PayloadAction<string>) {
     yield call(gqlRequest, DELETE_JOB, { id: action.payload })
     yield put(jobsActions.deleteJobSuccess(action.payload))
   } catch (error: any) {
-    yield put(jobsActions.fetchJobsFailure(error.message))
+    yield put(jobsActions.fetchJobsFailure(getErrorMessage(error)))
   }
 }
 
@@ -172,7 +173,7 @@ function* fetchMatchesForJobSaga(
     )
     yield put(matchesActions.fetchMatchesSuccess(data.matchesForJob.map(mapMatch)))
   } catch (error: any) {
-    yield put(matchesActions.fetchMatchesFailure(error.message))
+    yield put(matchesActions.fetchMatchesFailure(getErrorMessage(error)))
   }
 }
 
@@ -187,7 +188,7 @@ function* matchCandidateToJobSaga(
     )
     yield put(matchesActions.matchingSuccess(mapMatch(data.matchCandidateToJob)))
   } catch (error: any) {
-    yield put(matchesActions.matchingFailure(error.message))
+    yield put(matchesActions.matchingFailure(getErrorMessage(error)))
   }
 }
 
@@ -200,7 +201,7 @@ function* matchAllCandidatesToJobSaga(action: PayloadAction<string>) {
     )
     yield put(matchesActions.matchingSuccess(data.matchAllCandidatesToJob.map(mapMatch)))
   } catch (error: any) {
-    yield put(matchesActions.matchingFailure(error.message))
+    yield put(matchesActions.matchingFailure(getErrorMessage(error)))
   }
 }
 
@@ -216,7 +217,7 @@ function* updateMatchStatusSaga(
     )
     yield put(matchesActions.updateMatchStatusSuccess(mapMatch(data.updateCandidateMatch)))
   } catch (error: any) {
-    yield put(matchesActions.fetchMatchesFailure(error.message))
+    yield put(matchesActions.fetchMatchesFailure(getErrorMessage(error)))
   }
 }
 
@@ -238,7 +239,7 @@ function* uploadFilesSaga(action: PayloadAction<File[]>) {
     }
     yield put(uploadActions.uploadSuccess(tracker))
   } catch (error: any) {
-    yield put(uploadActions.uploadFailure(error.message))
+    yield put(uploadActions.uploadFailure(getErrorMessage(error)))
   }
 }
 
@@ -247,7 +248,7 @@ function* fetchProcessStatusSaga(action: PayloadAction<string>): Generator<any, 
     const status = yield call(getProcessStatus, action.payload)
     yield put(uploadActions.processEvent(status))
   } catch (error: any) {
-    yield put(uploadActions.uploadFailure(error.message))
+    yield put(uploadActions.uploadFailure(getErrorMessage(error)))
   }
 }
 
@@ -260,7 +261,7 @@ function* fetchRecentTrackersSaga(action: PayloadAction<number>) {
     )
     yield put(uploadActions.fetchRecentTrackersSuccess(data.recentProcessTrackers))
   } catch (error: any) {
-    yield put(uploadActions.fetchRecentTrackersFailure(error.message))
+    yield put(uploadActions.fetchRecentTrackersFailure(getErrorMessage(error)))
   }
 }
 
@@ -277,7 +278,7 @@ function* fetchExternalProfilesSaga(action: PayloadAction<string>) {
       profiles: data.candidateExternalProfiles,
     }))
   } catch (error: any) {
-    yield put(enrichmentActions.fetchExternalProfilesFailure(error.message))
+    yield put(enrichmentActions.fetchExternalProfilesFailure(getErrorMessage(error)))
   }
 }
 
@@ -293,7 +294,7 @@ function* enrichProfileSaga(action: PayloadAction<{ candidateId: string; source:
       profile: data.enrichCandidateProfile,
     }))
   } catch (error: any) {
-    yield put(enrichmentActions.enrichProfileFailure(error.message))
+    yield put(enrichmentActions.enrichProfileFailure(getErrorMessage(error)))
   }
 }
 
@@ -313,7 +314,7 @@ function* enrichFromUrlSaga(action: PayloadAction<{ candidateId: string; profile
       yield put(enrichmentActions.enrichFromUrlFailure('No enricher recognised that URL'))
     }
   } catch (error: any) {
-    yield put(enrichmentActions.enrichFromUrlFailure(error.message))
+    yield put(enrichmentActions.enrichFromUrlFailure(getErrorMessage(error)))
   }
 }
 
@@ -329,7 +330,7 @@ function* refreshProfileSaga(action: PayloadAction<{ profileId: string; candidat
       profile: data.refreshCandidateProfile,
     }))
   } catch (error: any) {
-    yield put(enrichmentActions.refreshProfileFailure(error.message))
+    yield put(enrichmentActions.refreshProfileFailure(getErrorMessage(error)))
   }
 }
 
@@ -342,7 +343,7 @@ function* fetchPendingCandidatesSaga() {
     )
     yield put(confirmationActions.fetchPendingCandidatesSuccess(data.pendingCandidates))
   } catch (error: any) {
-    yield put(confirmationActions.fetchPendingCandidatesFailure(error.message))
+    yield put(confirmationActions.fetchPendingCandidatesFailure(getErrorMessage(error)))
   }
 }
 
@@ -352,7 +353,7 @@ function* confirmCandidateSaga(action: PayloadAction<{ id: string }>) {
     yield call(gqlRequest, CONFIRM_CANDIDATE, { candidateId: id, input })
     yield put(confirmationActions.confirmCandidateSuccess({ id }))
   } catch (error: any) {
-    yield put(confirmationActions.confirmCandidateFailure(error.message))
+    yield put(confirmationActions.confirmCandidateFailure(getErrorMessage(error)))
   }
 }
 
@@ -361,7 +362,7 @@ function* discardCandidateSaga(action: PayloadAction<string>) {
     yield call(gqlRequest, DISCARD_CANDIDATE, { candidateId: action.payload })
     yield put(confirmationActions.discardCandidateSuccess({ id: action.payload }))
   } catch (error: any) {
-    yield put(confirmationActions.discardCandidateFailure(error.message))
+    yield put(confirmationActions.discardCandidateFailure(getErrorMessage(error)))
   }
 }
 

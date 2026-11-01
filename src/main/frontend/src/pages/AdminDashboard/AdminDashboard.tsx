@@ -8,6 +8,7 @@ import { gqlRequestWithRefresh } from '@/services/graphql'
 import { getJobQueueStats, JobQueueStats } from '@/services/api'
 import { ADMIN_DASHBOARD_ALL, CHECK_SERVICE_HEALTH } from '@/graphql/adminQueries'
 import styles from './AdminDashboard.module.css'
+import { getErrorMessage } from '@/utils/errorMessage'
 
 // Types for the dashboard data
 interface SystemHealth {
@@ -164,7 +165,7 @@ export default function AdminDashboard() {
     } catch (err) {
       // Surface error only on the very first load; background polls fail silently
       if (!isBackground) {
-        setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
+        setError(getErrorMessage(err, 'Failed to load dashboard data'))
       }
     }
 

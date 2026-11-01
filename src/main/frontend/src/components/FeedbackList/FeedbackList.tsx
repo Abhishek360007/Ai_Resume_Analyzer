@@ -19,6 +19,7 @@ import { selectUser } from '@store/selectors/authSelectors'
 import { EntityType } from '@/components/FeedbackForm/FeedbackForm'
 import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog'
 import styles from './FeedbackList.module.css'
+import { getErrorMessage } from '@/utils/errorMessage'
 
 interface User {
   id: string
@@ -97,7 +98,7 @@ export default function FeedbackList({
       setFeedbackList(feedback)
       setAverageRating(rating || null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load feedback')
+      setError(getErrorMessage(err, 'Failed to load feedback'))
     } finally {
       setLoading(false)
     }
@@ -116,7 +117,7 @@ export default function FeedbackList({
       setDeleteTarget(null)
       fetchFeedback()
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to delete feedback')
+      setActionError(getErrorMessage(err, 'Failed to delete feedback'))
     } finally {
       setDeleteBusy(false)
     }
@@ -129,7 +130,7 @@ export default function FeedbackList({
       await graphqlClient.request(mutation, { id: feedbackId })
       fetchFeedback()
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to update visibility')
+      setActionError(getErrorMessage(err, 'Failed to update visibility'))
     }
   }
 

@@ -17,6 +17,7 @@ import {
 } from '@/graphql/userQueries'
 import { UserRole } from '@/types/auth'
 import styles from './UserManagement.module.css'
+import { getErrorMessage } from '@/utils/errorMessage'
 
 interface User {
   id: string
@@ -85,7 +86,7 @@ export default function UserManagement() {
       const result = await graphqlClient.request<{ allUsers: User[] }>(ALL_USERS)
       setUsers(result.allUsers)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load users')
+      setError(getErrorMessage(err, 'Failed to load users'))
     } finally {
       setLoading(false)
     }
@@ -107,7 +108,7 @@ export default function UserManagement() {
       )
       setUsers(result.searchUsers)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed')
+      setError(getErrorMessage(err, 'Search failed'))
     } finally {
       setLoading(false)
     }
@@ -133,7 +134,7 @@ export default function UserManagement() {
       })
       fetchUsers()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to create user')
+      alert(getErrorMessage(err, 'Failed to create user'))
     }
   }
 
@@ -151,7 +152,7 @@ export default function UserManagement() {
       setSelectedUser(null)
       fetchUsers()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to update user')
+      alert(getErrorMessage(err, 'Failed to update user'))
     }
   }
 
@@ -165,7 +166,7 @@ export default function UserManagement() {
       setSelectedUser(null)
       fetchUsers()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete user')
+      alert(getErrorMessage(err, 'Failed to delete user'))
     }
   }
 
@@ -179,7 +180,7 @@ export default function UserManagement() {
       }
       fetchUsers()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to toggle user status')
+      alert(getErrorMessage(err, 'Failed to toggle user status'))
     }
   }
 
@@ -209,7 +210,7 @@ export default function UserManagement() {
       setConfirmPassword('')
       alert('Password reset successfully')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to reset password')
+      alert(getErrorMessage(err, 'Failed to reset password'))
     }
   }
 

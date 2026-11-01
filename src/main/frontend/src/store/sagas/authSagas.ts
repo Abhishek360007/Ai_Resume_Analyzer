@@ -15,6 +15,7 @@ import type {
   ChangePasswordData,
   User,
 } from '@/types/auth'
+import { getErrorMessage } from '@/utils/errorMessage'
 
 /**
  * Login saga
@@ -29,7 +30,7 @@ function* loginSaga(action: PayloadAction<LoginCredentials>) {
     yield put(authActions.loginSuccess(response))
   } catch (error: unknown) {
     const errorMessage =
-      error instanceof Error ? error.message : 'Login failed'
+      getErrorMessage(error, 'Login failed')
     yield put(authActions.loginFailure(errorMessage))
   }
 }
@@ -47,7 +48,7 @@ function* registerSaga(action: PayloadAction<RegisterData>) {
     yield put(authActions.registerSuccess(response))
   } catch (error: unknown) {
     const errorMessage =
-      error instanceof Error ? error.message : 'Registration failed'
+      getErrorMessage(error, 'Registration failed')
     yield put(authActions.registerFailure(errorMessage))
   }
 }
@@ -74,7 +75,7 @@ function* refreshTokenSaga() {
     yield put(authActions.refreshTokenSuccess(response))
   } catch (error: unknown) {
     const errorMessage =
-      error instanceof Error ? error.message : 'Token refresh failed'
+      getErrorMessage(error, 'Token refresh failed')
     yield put(authActions.refreshTokenFailure(errorMessage))
 
     // Clear tokens on refresh failure
@@ -91,7 +92,7 @@ function* getCurrentUserSaga() {
     yield put(authActions.getCurrentUserSuccess(user))
   } catch (error: unknown) {
     const errorMessage =
-      error instanceof Error ? error.message : 'Failed to get user info'
+      getErrorMessage(error, 'Failed to get user info')
     yield put(authActions.getCurrentUserFailure(errorMessage))
   }
 }
@@ -105,7 +106,7 @@ function* changePasswordSaga(action: PayloadAction<ChangePasswordData>) {
     yield put(authActions.changePasswordSuccess())
   } catch (error: unknown) {
     const errorMessage =
-      error instanceof Error ? error.message : 'Password change failed'
+      getErrorMessage(error, 'Password change failed')
     yield put(authActions.changePasswordFailure(errorMessage))
   }
 }
