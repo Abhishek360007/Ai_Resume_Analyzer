@@ -13,6 +13,7 @@
   display: flex;
   gap: 1rem;
   align-items: flex-end;
+  flex-wrap: wrap;
 }
 
 .jobSelect {
@@ -53,6 +54,28 @@
 }
 
 .matchButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.exportButton {
+  background: white;
+  color: #5a67d8;
+  border: 2px solid #667eea;
+  padding: calc(0.75rem - 2px) 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.exportButton:hover:not(:disabled) {
+  background: #ebf4ff;
+}
+
+.exportButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

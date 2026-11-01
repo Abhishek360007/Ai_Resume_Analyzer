@@ -9,6 +9,8 @@ import {
 } from '@/store/slices/matchesSlice'
 import { fetchExternalProfiles } from '@/store/slices/enrichmentSlice'
 import { RootState } from '@/store'
+import { downloadMatchReport } from '@/services/api'
+import ScoreInsights from '@/components/ScoreInsights/ScoreInsights'
 import styles from './CandidateMatching.module.css'
 
 const CandidateMatching = () => {
@@ -19,6 +21,8 @@ const CandidateMatching = () => {
   const { profilesByCandidateId } = useSelector((state: RootState) => state.enrichment)
   const [selectedJobId, setSelectedJobId] = useState<string>('')
   const [alreadyMatchingWarning, setAlreadyMatchingWarning] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
 
   useEffect(() => {
     dispatch(fetchCandidates())
@@ -64,6 +68,19 @@ const CandidateMatching = () => {
       return
     }
     dispatch(matchAllCandidatesToJob(selectedJobId))
+  }
+
+  const handleExportPdf = async () => {
+    if (!selectedJobId || exporting) return
+    setExporting(true)
+    setExportError(null)
+    try {
+      await downloadMatchReport(selectedJobId, jobs.find((j) => j.id === selectedJobId)?.title)
+    } catch {
+      setExportError('Could not generate the PDF report. Please try again.')
+    } finally {
+      setExporting(false)
+    }
   }
 
   const handleShortlist = (matchId: string, currentStatus: boolean) => {
@@ -163,7 +180,23 @@ const CandidateMatching = () => {
             )}
           </button>
         )}
+        {selectedJobId && matches.length > 0 && (
+          <button
+            onClick={handleExportPdf}
+            className={styles.exportButton}
+            disabled={exporting || matchingInProgress}
+            aria-busy={exporting}
+          >
+            {exporting ? 'Generating PDF…' : '📄 Export PDF Report'}
+          </button>
+        )}
       </div>
+
+      {exportError && (
+        <div className={styles.errorBanner} role="alert">
+          ❌ {exportError}
+        </div>
+      )}
 
       {selectedJob && (
         <div className={styles.jobInfo}>
@@ -182,6 +215,15 @@ const CandidateMatching = () => {
         <div className={styles.empty}>
           <p>No matches found. Click &quot;🎯 Match All Candidates&quot; to generate AI-powered matches.</p>
         </div>
+      )}
+
+      {matchesWithCandidates.length > 0 && !matchingInProgress && (
+        <ScoreInsights
+          matches={matches}
+          topCandidateName={
+            [...matchesWithCandidates].sort((a, b) => b.matchScore - a.matchScore)[0]?.candidate?.name
+          }
+        />
       )}
 
       {matchesWithCandidates.length > 0 && (

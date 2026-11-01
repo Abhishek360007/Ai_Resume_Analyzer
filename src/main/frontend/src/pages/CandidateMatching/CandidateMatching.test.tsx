@@ -167,7 +167,7 @@ describe('CandidateMatching Component', () => {
     render(<CandidateMatching />, { preloadedState: initialState });
     
     // Check for candidate name in match card
-    expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /John Doe/i })).toBeInTheDocument();
   });
 
   it('should have match button or trigger', () => {
@@ -177,5 +177,26 @@ describe('CandidateMatching Component', () => {
     if (matchButton) {
       expect(matchButton).toBeInTheDocument();
     }
+  });
+});
+
+describe('CandidateMatching insights and export', () => {
+  const loadedState = {
+    matches: { matches: [mockCandidateMatch], loading: false, error: null, matchingInProgress: false },
+    candidates: { candidates: mockCandidates, loading: false, error: null },
+    jobs: { jobs: mockJobRequirements, loading: false, error: null },
+  };
+
+  it('shows score insights once matches are loaded', () => {
+    render(<CandidateMatching />, { preloadedState: loadedState });
+    expect(screen.getByRole('heading', { name: /Score Insights/i })).toBeInTheDocument();
+    expect(screen.getByText('Score distribution')).toBeInTheDocument();
+  });
+
+  it('hides score insights while matching is in progress', () => {
+    render(<CandidateMatching />, {
+      preloadedState: { ...loadedState, matches: { ...loadedState.matches, matchingInProgress: true } },
+    });
+    expect(screen.queryByRole('heading', { name: /Score Insights/i })).not.toBeInTheDocument();
   });
 });

@@ -1,0 +1,172 @@
+.insights {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.insights h3 {
+  font-size: 1.25rem;
+  color: #2d3748;
+  margin: 0 0 1rem 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: 1.5rem;
+}
+
+.panel h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4a5568;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.75rem 0;
+}
+
+.radar {
+  display: block;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.gridLine {
+  fill: none;
+  stroke: #e2e8f0;
+  stroke-width: 1;
+}
+
+.axisLabel {
+  font-size: 11px;
+  font-weight: 600;
+  fill: #4a5568;
+}
+
+.poolShape {
+  fill: rgba(160, 174, 192, 0.25);
+  stroke: #a0aec0;
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+
+.topShape {
+  fill: rgba(102, 126, 234, 0.25);
+  stroke: #667eea;
+  stroke-width: 2;
+}
+
+.topDot {
+  fill: #667eea;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0 0;
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.topSwatch {
+  background: #667eea;
+}
+
+.poolSwatch {
+  background: rgba(160, 174, 192, 0.5);
+  border: 2px dashed #a0aec0;
+}
+
+.bands {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.band {
+  display: grid;
+  grid-template-columns: 120px 1fr 32px;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.bandLabel {
+  color: #4a5568;
+  font-weight: 600;
+}
+
+.bandTrack {
+  height: 14px;
+  background: #edf2f7;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.bandFill {
+  display: block;
+  height: 100%;
+  border-radius: 7px;
+  transition: width 0.3s ease;
+}
+
+.bandCount {
+  text-align: right;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.excellent {
+  background: #48bb78;
+}
+
+.good {
+  background: #4299e1;
+}
+
+.average {
+  background: #ed8936;
+}
+
+.poor {
+  background: #f56565;
+}
+
+.callout {
+  margin: 1.25rem 0 0 0;
+  padding: 0.75rem 1rem;
+  background: #f7fafc;
+  border-left: 4px solid #667eea;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+@media (max-width: 480px) {
+  .band {
+    grid-template-columns: 100px 1fr 28px;
+  }
+}
