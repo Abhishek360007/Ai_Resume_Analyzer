@@ -124,6 +124,12 @@ docker compose up -d
 
 See [docs/DOCKER-DEPLOYMENT.md](docs/DOCKER-DEPLOYMENT.md) for details.
 
+### Deploy to Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Abhishek360007/Ai_Resume_Analyzer)
+
+The [render.yaml](render.yaml) Blueprint creates a PostgreSQL database and a Docker web service that runs the OpenAI profile. Render asks for your `OPENAI_API_KEY` during setup. After the first deploy, log in as `admin` and change every default password under **User Management**.
+
 ### Production build
 
 ```bash
