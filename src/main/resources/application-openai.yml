@@ -1,0 +1,19 @@
+# LLM provider profile: OpenAI
+# Activate with SPRING_PROFILES_ACTIVE=openai and set OPENAI_API_KEY
+spring:
+  ai:
+    openai:
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: ${OPENAI_MODEL:gpt-4o-mini}
+      embedding:
+        options:
+          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+          # Shorten embeddings to fit the vector(768) column
+          dimensions: 768
+
+app:
+  llm:
+    provider-name: OpenAI

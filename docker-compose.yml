@@ -44,7 +44,7 @@ services:
 
       # LLM Studio configuration
       LLM_STUDIO_BASE_URL: ${LLM_STUDIO_BASE_URL:-http://host.docker.internal:1234}
-      LLM_STUDIO_API_KEY: ${LLM_STUDIO_API_KEY:-sk-lm-qetrGQun:QqqQOHpvnMUbonilIAZE}
+      LLM_STUDIO_API_KEY: ${LLM_STUDIO_API_KEY:-not-needed}
       LLM_STUDIO_MODEL: ${LLM_STUDIO_MODEL:-mistralai/ministral-3-14b-reasoning}
       LLM_STUDIO_EMBEDDING_MODEL: ${LLM_STUDIO_EMBEDDING_MODEL:-text-embedding-nomic-embed-text-v1.5}
 

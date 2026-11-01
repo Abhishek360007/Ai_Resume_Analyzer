@@ -50,7 +50,7 @@ spring:
   ai:
     openai:
       base-url: ${LLM_STUDIO_BASE_URL:http://localhost:1234}
-      api-key: ${LLM_STUDIO_API_KEY:sk-lm-qetrGQun:QqqQOHpvnMUbonilIAZE}
+      api-key: ${LLM_STUDIO_API_KEY:not-needed}
       chat:
         options:
           model: ${LLM_STUDIO_MODEL:mistralai/mistral-7b-instruct-v0.3}
@@ -75,6 +75,9 @@ ai:
 
 # Application Configuration
 app:
+  # Display name of the active LLM provider (overridden by the ollama / openai profiles)
+  llm:
+    provider-name: ${LLM_PROVIDER_NAME:LM Studio}
   upload:
     directory: ${UPLOAD_DIR:./uploads}
     allowed-extensions: .doc,.docx,.pdf

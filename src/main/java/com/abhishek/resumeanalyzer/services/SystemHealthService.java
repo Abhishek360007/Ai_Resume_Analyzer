@@ -43,6 +43,9 @@ public class SystemHealthService {
     @Value("${spring.ai.openai.api-key:}")
     private String llmStudioApiKey;
 
+    @Value("${app.llm.provider-name:LM Studio}")
+    private String llmProviderName;
+
     private static final int TIMEOUT_MS = 5000;
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -53,7 +56,7 @@ public class SystemHealthService {
     @PostConstruct
     public void initializeHealthRecords() {
         createOrUpdateHealthRecord("database", "PostgreSQL Database");
-        createOrUpdateHealthRecord("llm-studio", "LM Studio API");
+        createOrUpdateHealthRecord("llm-studio", llmProviderName + " API");
         createOrUpdateHealthRecord("application", "Spring Boot Application");
     }
 
@@ -121,7 +124,7 @@ public class SystemHealthService {
     @Transactional
     public SystemHealth checkLLMStudioHealth() {
         long startTime = System.currentTimeMillis();
-        SystemHealth health = getOrCreateHealthRecord("llm-studio", "LM Studio API");
+        SystemHealth health = getOrCreateHealthRecord("llm-studio", llmProviderName + " API");
 
         String baseUrl = StringUtils.hasText(llmStudioBaseUrl) ? llmStudioBaseUrl : "http://localhost:1234";
         String modelsUrl = baseUrl.endsWith("/") ? baseUrl + "v1/models" : baseUrl + "/v1/models";
@@ -144,32 +147,32 @@ public class SystemHealthService {
                     modelCount = list.size();
                 }
                 String message = modelCount > 0
-                        ? "LM Studio is running (" + modelCount + " model(s) loaded)"
-                        : "LM Studio is running but no models are loaded";
+                        ? llmProviderName + " is running (" + modelCount + " model(s) loaded)"
+                        : llmProviderName + " is running but no models are loaded";
                 health.recordSuccess(responseTime, message);
                 log.debug("LLM Studio health check: SUCCESS ({}ms, {} model(s))", responseTime, modelCount);
                 return systemHealthRepository.save(health);
             }
 
             long errorTime = System.currentTimeMillis() - startTime;
-            String message = "LM Studio returned HTTP " + response.getStatusCode().value() + " at " + baseUrl;
+            String message = llmProviderName + " returned HTTP " + response.getStatusCode().value() + " at " + baseUrl;
             health.recordFailure(errorTime, message);
             log.warn("LLM Studio health check: HTTP {} at {}", response.getStatusCode().value(), baseUrl);
         } catch (HttpClientErrorException e) {
             long errorTime = System.currentTimeMillis() - startTime;
             String message = (e.getStatusCode().value() == 401 || e.getStatusCode().value() == 403)
-                    ? "LM Studio authentication failed at " + baseUrl + " (check LLM_STUDIO_API_KEY)"
-                    : "LM Studio HTTP error " + e.getStatusCode().value() + " at " + baseUrl;
+                    ? llmProviderName + " authentication failed at " + baseUrl + " (check the API key)"
+                    : llmProviderName + " HTTP error " + e.getStatusCode().value() + " at " + baseUrl;
             health.recordFailure(errorTime, message);
             log.warn("LLM Studio health check: {}", message);
         } catch (ResourceAccessException e) {
             long errorTime = System.currentTimeMillis() - startTime;
-            String message = "LM Studio is not running or not accessible at " + baseUrl;
+            String message = llmProviderName + " is not running or not accessible at " + baseUrl;
             health.recordFailure(errorTime, message);
             log.warn("LLM Studio health check: NOT RUNNING at {} (expected if LM Studio is not started)", baseUrl);
         } catch (Exception e) {
             long errorTime = System.currentTimeMillis() - startTime;
-            health.recordFailure(errorTime, "LM Studio health check failed: " + e.getMessage());
+            health.recordFailure(errorTime, llmProviderName + " health check failed: " + e.getMessage());
             log.error("LLM Studio health check: FAILED", e);
         }
 

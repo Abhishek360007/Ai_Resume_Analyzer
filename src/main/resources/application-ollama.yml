@@ -1,0 +1,23 @@
+# LLM provider profile: Ollama (https://ollama.com)
+# Activate with SPRING_PROFILES_ACTIVE=ollama
+#
+#   ollama pull llama3.1:8b
+#   ollama pull nomic-embed-text
+#
+# Ollama exposes an OpenAI-compatible API under /v1, which Spring AI appends itself.
+spring:
+  ai:
+    openai:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      api-key: ollama
+      chat:
+        options:
+          model: ${OLLAMA_MODEL:llama3.1:8b}
+      embedding:
+        options:
+          # nomic-embed-text produces 768-dimension vectors, matching the pgvector column
+          model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
+
+app:
+  llm:
+    provider-name: Ollama
