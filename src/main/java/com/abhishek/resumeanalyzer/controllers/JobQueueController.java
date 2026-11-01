@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -28,6 +29,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/jobs")
 @RequiredArgsConstructor
+// Queue operations (cancel, cleanup, stale reset) are administrative; only the admin dashboard uses them
+@PreAuthorize("hasRole('ADMIN')")
 @ConditionalOnProperty(name = "app.pekko.enabled", havingValue = "true", matchIfMissing = true)
 public class JobQueueController {
 
@@ -228,7 +231,7 @@ public class JobQueueController {
         metrics.put("failureRate", String.format("%.2f%%", failureRate));
         metrics.put("averageProcessingDuration", jobQueueService.getAverageProcessingDuration(JobType.RESUME_PROCESSING));
         
-        log.debug("Recent metrics: totalJobs={}, completedJobs={}, failedJobs={}, successRate={:.2f}%",
+        log.debug("Recent metrics: totalJobs={}, completedJobs={}, failedJobs={}, successRate={}%",
                  totalJobs, completedJobs, failedJobs, successRate);
         
         return ResponseEntity.ok(metrics);

@@ -62,6 +62,13 @@ public class CandidateResolver {
 
     @QueryMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'RECRUITER', 'HIRING_MANAGER', 'HR')")
+    public List<Candidate> candidatesByExperienceRange(@Argument int minYears, @Argument int maxYears) {
+        log.info("Fetching candidates with {}-{} years of experience", minYears, maxYears);
+        return candidateRepository.findByExperienceRange(minYears, maxYears);
+    }
+
+    @QueryMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECRUITER', 'HIRING_MANAGER', 'HR')")
     public List<Candidate> pendingCandidates() {
         log.info("Fetching candidates awaiting confirmation");
         return candidateRepository.findByStatus(CandidateStatus.PENDING_CONFIRMATION);

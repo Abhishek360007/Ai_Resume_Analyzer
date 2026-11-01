@@ -52,6 +52,23 @@ public class JobRequirementResolver {
         return jobRepository.findByIsActive(true);
     }
 
+    @QueryMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECRUITER', 'HIRING_MANAGER')")
+    public List<JobRequirement> searchJobsByTitle(@Argument String title) {
+        log.info("Searching job requirements by title: {}", title);
+        return jobRepository.findByTitleContainingIgnoreCase(title);
+    }
+
+    @MutationMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECRUITER')")
+    public JobRequirement deactivateJobRequirement(@Argument UUID id) {
+        log.info("Deactivating job requirement: {}", id);
+        JobRequirement job = jobRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Job requirement not found: " + id));
+        job.setIsActive(false);
+        return jobRepository.save(job);
+    }
+
     @MutationMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'RECRUITER')")
     public JobRequirement createJobRequirement(
@@ -99,6 +116,7 @@ public class JobRequirementResolver {
     }
 
     @MutationMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECRUITER')")
     public JobRequirement updateJobRequirement(
             @Argument UUID id,
             @Argument String title,
@@ -151,6 +169,7 @@ public class JobRequirementResolver {
     }
 
     @MutationMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECRUITER')")
     public Boolean deleteJobRequirement(@Argument UUID id) {
         log.info("Deleting job requirement: {}", id);
         jobRepository.deleteById(id);

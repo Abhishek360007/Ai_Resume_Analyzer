@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class SkillResolver {
     private final SkillRepository skillRepository;
 
     @QueryMapping
+    @PreAuthorize("isAuthenticated()")
     public Skill skill(@Argument UUID id) {
         log.info("Fetching skill: {}", id);
         return skillRepository.findById(id)
@@ -30,18 +32,21 @@ public class SkillResolver {
     }
 
     @QueryMapping
+    @PreAuthorize("isAuthenticated()")
     public List<Skill> allSkills() {
         log.info("Fetching all skills");
         return skillRepository.findAll();
     }
 
     @QueryMapping
+    @PreAuthorize("isAuthenticated()")
     public List<Skill> activeSkills() {
         log.info("Fetching active skills");
         return skillRepository.findByIsActive(true);
     }
 
     @QueryMapping
+    @PreAuthorize("isAuthenticated()")
     public List<Skill> searchSkills(@Argument String name) {
         log.info("Searching skills by name: {}", name);
         if (name == null || name.trim().isEmpty()) {
@@ -51,18 +56,21 @@ public class SkillResolver {
     }
 
     @QueryMapping
+    @PreAuthorize("isAuthenticated()")
     public List<Skill> skillsByCategory(@Argument String category) {
         log.info("Fetching skills by category: {}", category);
         return skillRepository.findByCategory(category);
     }
 
     @QueryMapping
+    @PreAuthorize("isAuthenticated()")
     public List<String> skillCategories() {
         log.info("Fetching all skill categories");
         return skillRepository.findAllCategories();
     }
 
     @MutationMapping
+    @PreAuthorize("hasRole(\'ADMIN\')")
     public Skill createSkill(
             @Argument String name,
             @Argument String category,
@@ -86,6 +94,7 @@ public class SkillResolver {
     }
 
     @MutationMapping
+    @PreAuthorize("hasRole(\'ADMIN\')")
     public Skill updateSkill(
             @Argument UUID id,
             @Argument String name,
@@ -114,6 +123,7 @@ public class SkillResolver {
     }
 
     @MutationMapping
+    @PreAuthorize("hasRole(\'ADMIN\')")
     public Boolean deleteSkill(@Argument UUID id) {
         log.info("Deleting skill: {}", id);
         skillRepository.deleteById(id);

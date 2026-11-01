@@ -45,6 +45,14 @@ public interface JobRequirementRepository extends JpaRepository<JobRequirement, 
     List<JobRequirement> findByExperienceYears(@Param("years") Integer years);
 
     /**
+     * Find job requirements whose title contains the given text, ignoring case.
+     *
+     * @param title Text to search for
+     * @return Matching job requirements
+     */
+    List<JobRequirement> findByTitleContainingIgnoreCase(String title);
+
+    /**
      * Find active job requirements with specific skills
      * 
      * @param skill The skill to search for
