@@ -1,6 +1,17 @@
 import { Page } from '@playwright/test';
 
 /**
+ * Abort the live upload-status stream (Server-Sent Events) for this page.
+ *
+ * The app keeps that request open for as long as a page is open, so Playwright's
+ * `waitForLoadState('networkidle')` would never resolve. The UI already copes with the
+ * stream being unavailable, so tests run without it.
+ */
+export async function blockLiveStatusStream(page: Page): Promise<void> {
+  await page.route('**/api/upload/status/events**', (route) => route.abort())
+}
+
+/**
  * Shared authentication helper for E2E tests.
  * Logs in as admin unless a specific user is requested.
  */
@@ -9,6 +20,8 @@ export async function loginAs(
   username = 'admin',
   password = 'Admin@123'
 ): Promise<void> {
+  await blockLiveStatusStream(page)
+
   // Navigate to app root — will redirect to /login if not authenticated
   await page.goto('/');
   await page.waitForLoadState('networkidle');

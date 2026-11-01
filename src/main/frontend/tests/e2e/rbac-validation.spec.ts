@@ -2,6 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { blockLiveStatusStream } from './helpers/auth';
 
 /**
  * RBAC End-to-End Validation Tests
@@ -30,6 +31,7 @@ async function captureScreenshot(page: Page, filename: string) {
 }
 
 async function login(page: Page, username: string, password: string) {
+  await blockLiveStatusStream(page);
   await page.goto('/login');
   // Wait for the login form to appear
   await page.waitForSelector('#username', { timeout: 15000 });
