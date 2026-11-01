@@ -4,7 +4,9 @@ import com.abhishek.resumeanalyzer.models.UserRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -32,6 +34,7 @@ public class User {
     private String email;
 
     @Column(name = "password_hash", nullable = false)
+    @ToString.Exclude
     private String passwordHash;
 
     @Column(name = "first_name", length = 100)
@@ -58,8 +61,12 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // Excluded from toString/equals/hashCode: touching this lazy proxy outside a session
+    // throws LazyInitializationException (e.g. when Spring Security calls getName() on the principal)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private User createdBy;
 
     /**
