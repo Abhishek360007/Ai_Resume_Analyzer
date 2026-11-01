@@ -5,6 +5,8 @@ import com.abhishek.resumeanalyzer.models.JobPriority;
 import com.abhishek.resumeanalyzer.models.JobStatus;
 import com.abhishek.resumeanalyzer.models.JobType;
 import com.abhishek.resumeanalyzer.repositories.JobQueueRepository;
+import com.abhishek.resumeanalyzer.repos.ProcessTrackerRepository;
+import com.abhishek.resumeanalyzer.models.ProcessStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +31,9 @@ class JobQueueServiceTest {
 
     @Mock
     private JobQueueRepository jobQueueRepository;
+
+    @Mock
+    private ProcessTrackerRepository trackerRepository;
 
     @InjectMocks
     private JobQueueService jobQueueService;
@@ -337,6 +342,46 @@ class JobQueueServiceTest {
         assertEquals(1, result);
         verify(jobQueueRepository).findStaleJobs(any(LocalDateTime.class));
         verify(jobQueueRepository).saveAll(anyList());
+    }
+
+    @Test
+    void testResetStaleJobs_RetriesExhausted_MarksTrackerFailed() {
+        // Arrange
+        UUID trackerId = UUID.randomUUID();
+        JobQueue staleJob = createMockJob(testJobId, JobStatus.PROCESSING);
+        staleJob.setRetryCount(3);
+        staleJob.setMaxRetries(3);
+        staleJob.setHeartbeatAt(LocalDateTime.now().minusMinutes(20));
+        staleJob.setMetadata(new HashMap<>(Map.of("trackerId", trackerId.toString())));
+
+        when(jobQueueRepository.findStaleJobs(any(LocalDateTime.class)))
+                .thenReturn(Collections.singletonList(staleJob));
+
+        // Act
+        int result = jobQueueService.resetStaleJobs();
+
+        // Assert: the upload finishes as FAILED instead of staying INITIATED forever
+        assertEquals(1, result);
+        assertEquals(JobStatus.FAILED, staleJob.getStatus());
+        verify(trackerRepository).recordFailedFile(eq(trackerId), eq(ProcessStatus.FAILED), contains("stopped responding"));
+    }
+
+    @Test
+    void testResetStaleJobs_RetryableJob_LeavesTrackerAlone() {
+        // Arrange
+        JobQueue staleJob = createMockJob(testJobId, JobStatus.PROCESSING);
+        staleJob.setRetryCount(1);
+        staleJob.setMaxRetries(3);
+        staleJob.setHeartbeatAt(LocalDateTime.now().minusMinutes(20));
+
+        when(jobQueueRepository.findStaleJobs(any(LocalDateTime.class)))
+                .thenReturn(Collections.singletonList(staleJob));
+
+        // Act
+        jobQueueService.resetStaleJobs();
+
+        // Assert
+        verifyNoInteractions(trackerRepository);
     }
 
     @Test

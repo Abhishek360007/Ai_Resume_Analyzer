@@ -98,7 +98,7 @@ const ProcessTrackerTable = ({ trackers, onRefresh }: ProcessTrackerTableProps) 
                   <td className={styles.dateCell}>
                     {tracker.completedAt ? formatDate(tracker.completedAt) : tracker.endTime ? formatDate(tracker.endTime) : '-'}
                   </td>
-                  <td className={styles.messageCell}>
+                  <td className={styles.messageCell} title={tracker.message || undefined}>
                     {tracker.message || '-'}
                   </td>
                   <td>

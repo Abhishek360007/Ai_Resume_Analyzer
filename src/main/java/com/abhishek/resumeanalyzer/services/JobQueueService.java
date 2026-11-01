@@ -4,6 +4,8 @@ import com.abhishek.resumeanalyzer.entities.JobQueue;
 import com.abhishek.resumeanalyzer.models.JobPriority;
 import com.abhishek.resumeanalyzer.models.JobStatus;
 import com.abhishek.resumeanalyzer.models.JobType;
+import com.abhishek.resumeanalyzer.models.ProcessStatus;
+import com.abhishek.resumeanalyzer.repos.ProcessTrackerRepository;
 import com.abhishek.resumeanalyzer.repositories.JobQueueRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ import java.util.UUID;
 public class JobQueueService {
 
     private final JobQueueRepository jobQueueRepository;
+    private final ProcessTrackerRepository trackerRepository;
 
     @Value("${app.pekko.stale-job-threshold-minutes:15}")
     private int staleJobThresholdMinutes;
@@ -303,6 +306,7 @@ public class JobQueueService {
                 dlqCount++;
                 log.error("Moving stale job to DLQ (max retries exceeded): jobId={}, retryCount={}", 
                          job.getId(), job.getRetryCount());
+                recordFailureOnTracker(job);
             }
         }
         
@@ -312,6 +316,24 @@ public class JobQueueService {
                  resetCount, dlqCount, staleJobs.size());
         
         return resetCount + dlqCount;
+    }
+
+    /**
+     * Count an abandoned job as a failed file on its upload tracker, so the batch finishes
+     * as FAILED instead of showing INITIATED forever.
+     */
+    private void recordFailureOnTracker(JobQueue job) {
+        Object trackerId = job.getMetadata() != null ? job.getMetadata().get("trackerId") : null;
+        if (trackerId == null) {
+            return;
+        }
+        try {
+            trackerRepository.recordFailedFile(UUID.fromString(trackerId.toString()), ProcessStatus.FAILED,
+                    "Processing failed permanently: the job stopped responding after "
+                            + job.getRetryCount() + " attempt(s)");
+        } catch (Exception e) {
+            log.warn("Could not update tracker {} for abandoned job {}: {}", trackerId, job.getId(), e.getMessage());
+        }
     }
 
     /**
