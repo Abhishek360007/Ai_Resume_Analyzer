@@ -1,0 +1,58 @@
+# Render Blueprint for AI Resume Analyzer
+# Deploy: https://render.com/deploy?repo=https://github.com/Abhishek360007/Ai_Resume_Analyzer
+#
+# Creates a PostgreSQL database (pgvector is enabled by the Flyway migration)
+# and a Docker web service that serves both the API and the React frontend.
+# You will be asked for OPENAI_API_KEY when the Blueprint is applied.
+
+databases:
+  - name: resume-analyzer-db
+    databaseName: resume_analyzer
+    user: resume_analyzer
+    plan: free
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: ai-resume-analyzer
+    runtime: docker
+    plan: free
+    branch: main
+    dockerfilePath: ./docker/Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: "8080"
+      # Fit the JVM into the 512 MB instance
+      - key: JAVA_OPTS
+        value: "-XX:MaxRAMPercentage=60 -XX:+UseSerialGC -XX:MaxMetaspaceSize=192m -Xss512k -XX:+ExitOnOutOfMemoryError"
+      - key: PEKKO_WORKERS
+        value: "2"
+      - key: DB_HOST
+        fromDatabase:
+          name: resume-analyzer-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: resume-analyzer-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: resume-analyzer-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: resume-analyzer-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: resume-analyzer-db
+          property: password

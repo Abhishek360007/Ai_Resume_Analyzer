@@ -7,9 +7,13 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { redirectToLogin } from '@/utils/tokenUtils'
 
+// Production builds are served by the backend itself, so default to same-origin
+// requests there; dev and tests keep talking to the local backend on :8080.
+const defaultBaseUrl = import.meta.env.PROD ? '' : 'http://localhost:8080'
+
 // Create axios instance
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? defaultBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
