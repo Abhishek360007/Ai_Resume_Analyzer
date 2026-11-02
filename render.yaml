@@ -1,18 +1,14 @@
 # Render Blueprint for AI Resume Analyzer
 # Deploy: https://render.com/deploy?repo=https://github.com/Abhishek360007/Ai_Resume_Analyzer
 #
-# Creates a PostgreSQL database (pgvector is enabled by the Flyway migration)
-# and a Docker web service that serves both the API and the React frontend.
+# Creates a Docker web service that serves both the API and the React frontend.
+# The database is an external PostgreSQL such as Neon (free, does not expire, supports
+# pgvector, which the Flyway migration enables). Render's free database is deleted after
+# 30 days, so it is not used. Set DB_HOST, DB_NAME, DB_USERNAME and DB_PASSWORD from the
+# Neon connection details in the service's Environment tab.
 # The AI provider is Google Gemini (free tier, key from https://aistudio.google.com/apikey).
 # Set GEMINI_API_KEY in the service's Environment tab. To use OpenAI instead, set
 # SPRING_PROFILES_ACTIVE=openai and OPENAI_API_KEY.
-
-databases:
-  - name: resume-analyzer-db
-    databaseName: resume_analyzer
-    user: resume_analyzer
-    plan: free
-    postgresMajorVersion: "16"
 
 services:
   - type: web
@@ -42,23 +38,18 @@ services:
         value: "-XX:MaxRAMPercentage=60 -XX:+UseSerialGC -XX:MaxMetaspaceSize=192m -Xss512k -XX:+ExitOnOutOfMemoryError -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -Dspring.jmx.enabled=false"
       - key: PEKKO_WORKERS
         value: "2"
+      # Use Neon's direct host (without "-pooler"); the app pools its own connections
       - key: DB_HOST
-        fromDatabase:
-          name: resume-analyzer-db
-          property: host
+        sync: false
       - key: DB_PORT
-        fromDatabase:
-          name: resume-analyzer-db
-          property: port
+        value: "5432"
       - key: DB_NAME
-        fromDatabase:
-          name: resume-analyzer-db
-          property: database
+        sync: false
       - key: DB_USERNAME
-        fromDatabase:
-          name: resume-analyzer-db
-          property: user
+        sync: false
       - key: DB_PASSWORD
-        fromDatabase:
-          name: resume-analyzer-db
-          property: password
+        sync: false
+      - key: DB_SSL_MODE
+        value: require
+      - key: DB_POOL_SIZE
+        value: "10"

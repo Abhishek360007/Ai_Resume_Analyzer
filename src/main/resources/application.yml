@@ -5,13 +5,19 @@ spring:
     name: resume-analyzer
   
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:resume_analyzer}
+    # Hosted databases such as Neon require SSL: set DB_SSL_MODE=require there
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:resume_analyzer}?sslmode=${DB_SSL_MODE:prefer}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
       # Resume workers each hold a connection for a job, plus brief progress updates
       maximum-pool-size: ${DB_POOL_SIZE:15}
+      # Neon suspends an idle database after 5 minutes and closes its connections;
+      # retire pooled connections well before that and allow time for it to wake up
+      max-lifetime: ${DB_MAX_LIFETIME:240000}
+      idle-timeout: 120000
+      connection-timeout: 30000
   
   jpa:
     # Built-in OSIV is replaced by OpenEntityManagerInViewConfig, which skips the SSE stream

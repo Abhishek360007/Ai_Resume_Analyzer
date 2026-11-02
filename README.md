@@ -128,7 +128,11 @@ See [docs/DOCKER-DEPLOYMENT.md](docs/DOCKER-DEPLOYMENT.md) for details.
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Abhishek360007/Ai_Resume_Analyzer)
 
-The [render.yaml](render.yaml) Blueprint creates a PostgreSQL database and a Docker web service that uses Google Gemini, which has a free tier. Create a key at [Google AI Studio](https://aistudio.google.com/apikey) and set it as `GEMINI_API_KEY` in the service's **Environment** tab. After the first deploy, log in as `admin` and change every default password under **User Management**.
+The [render.yaml](render.yaml) Blueprint creates a Docker web service that uses Google Gemini, which has a free tier. Create a key at [Google AI Studio](https://aistudio.google.com/apikey) and set it as `GEMINI_API_KEY` in the service's **Environment** tab.
+
+The database runs on [Neon](https://neon.tech), whose free PostgreSQL supports pgvector and does not expire (Render's free database is deleted after 30 days). Create a Neon project and, from its connection details with **Connection pooling turned off**, set `DB_HOST`, `DB_NAME`, `DB_USERNAME` and `DB_PASSWORD` in the service's **Environment** tab. Flyway creates the schema and default users on first start.
+
+After the first deploy, log in as `admin` and change every default password under **User Management**.
 
 ### Production build
 
