@@ -53,13 +53,17 @@ spring:
         enabled: true
   
   ai:
-    # Fail fast when the AI provider is down; the job queue has its own retries
+    # Retry briefly when the AI provider is down; the job queue has its own retries.
+    # 429 (rate limited, e.g. Gemini free-tier requests per minute) and 503 (overloaded)
+    # are client/server codes Spring AI would otherwise fail on immediately; waiting
+    # 5s + 10s + 20s lets a per-minute limit reset during a matching run.
     retry:
-      max-attempts: 3
+      max-attempts: 4
+      on-http-codes: 429,503
       backoff:
-        initial-interval: 2s
+        initial-interval: 5s
         multiplier: 2
-        max-interval: 10s
+        max-interval: 20s
     openai:
       base-url: ${LLM_STUDIO_BASE_URL:http://localhost:1234}
       api-key: ${LLM_STUDIO_API_KEY:not-needed}

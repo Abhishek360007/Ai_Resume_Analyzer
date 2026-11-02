@@ -35,9 +35,11 @@ services:
         generateValue: true
       - key: PORT
         value: "8080"
-      # Fit the JVM into the 512 MB instance
+      # Fit the JVM into the 512 MB instance. The free instance has ~0.1 CPU, so limit the
+      # JIT to its quick C1 tier: C2 compilation otherwise competes with startup for CPU
+      # and makes cold starts (after the instance sleeps) several times slower.
       - key: JAVA_OPTS
-        value: "-XX:MaxRAMPercentage=60 -XX:+UseSerialGC -XX:MaxMetaspaceSize=192m -Xss512k -XX:+ExitOnOutOfMemoryError"
+        value: "-XX:MaxRAMPercentage=60 -XX:+UseSerialGC -XX:MaxMetaspaceSize=192m -Xss512k -XX:+ExitOnOutOfMemoryError -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -Dspring.jmx.enabled=false"
       - key: PEKKO_WORKERS
         value: "2"
       - key: DB_HOST
