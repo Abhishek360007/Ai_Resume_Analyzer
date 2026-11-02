@@ -36,7 +36,7 @@
 
 .refreshingBadge {
   font-size: 0.8rem;
-  color: #667eea;
+  color: var(--primary);
   font-weight: 500;
   padding: 0.25rem 0.65rem;
   background: #eef2ff;
@@ -51,13 +51,13 @@
 
 .header h1 {
   font-size: 2rem;
-  color: #1a202c;
+  color: var(--text);
   margin: 0;
 }
 
 .refreshButton {
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-brand);
   color: white;
   border: none;
   border-radius: 6px;
@@ -68,7 +68,7 @@
 
 .refreshButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-primary);
 }
 
 .refreshButton:active {
@@ -80,15 +80,15 @@
   padding: 0.35rem 0.75rem;
   font-size: 0.8rem;
   background: transparent;
-  color: #667eea;
-  border: 1px solid #667eea;
+  color: var(--primary);
+  border: 1px solid var(--primary);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .checkNowButton:hover:not(:disabled) {
-  background: #667eea;
+  background: var(--primary);
   color: white;
 }
 
@@ -110,8 +110,8 @@
 .spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid #e2e8f0;
-  border-top-color: #667eea;
+  border: 4px solid var(--border);
+  border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -197,9 +197,9 @@
 }
 
 .statusUnknown {
-  background: #e2e8f0;
-  color: #2d3748;
-  border: 2px solid #a0aec0;
+  background: var(--border);
+  color: var(--text);
+  border: 2px solid var(--text-faint);
 }
 
 .statusIcon {
@@ -218,7 +218,7 @@
 
 .section h2 {
   font-size: 1.5rem;
-  color: #2d3748;
+  color: var(--text);
   margin-bottom: 1rem;
 }
 
@@ -230,15 +230,15 @@
 
 .healthCard {
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s;
 }
 
 .healthCard:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
 
@@ -248,13 +248,13 @@
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--border);
 }
 
 .serviceName {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--text);
 }
 
 .serviceStatus {
@@ -278,13 +278,13 @@
 
 .metricLabel {
   font-size: 0.9rem;
-  color: #718096;
+  color: var(--text-muted);
 }
 
 .metricValue {
   font-size: 0.95rem;
   font-weight: 500;
-  color: #2d3748;
+  color: var(--text);
 }
 
 /* Statistics Grid */
@@ -296,24 +296,24 @@
 
 .statsCard {
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s;
 }
 
 .statsCard:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
 
 .statsCard h2 {
   font-size: 1.2rem;
-  color: #2d3748;
+  color: var(--text);
   margin: 0 0 1rem 0;
   padding-bottom: 0.75rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--border);
 }
 
 .statsContent {
@@ -331,18 +331,18 @@
 
 .statLabel {
   font-size: 0.95rem;
-  color: #4a5568;
+  color: var(--text-secondary);
 }
 
 .statValue {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #667eea;
+  color: var(--primary);
 }
 
 .statDivider {
   height: 1px;
-  background: #e2e8f0;
+  background: var(--border);
   margin: 0.5rem 0;
 }
 
@@ -380,7 +380,7 @@
   margin-top: 2.5rem;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -389,21 +389,21 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
   background: linear-gradient(135deg, #f7faff 0%, #eef2ff 100%);
 }
 
 .auditHeader h2 {
   margin: 0;
   font-size: 1.2rem;
-  color: #2d3748;
+  color: var(--text);
 }
 
 .auditLoading,
 .auditEmpty {
   padding: 2.5rem;
   text-align: center;
-  color: #718096;
+  color: var(--text-muted);
   font-size: 0.95rem;
 }
 
@@ -418,15 +418,15 @@
 }
 
 .auditTable thead tr {
-  background: #f7fafc;
+  background: var(--surface-muted);
 }
 
 .auditTable th {
   padding: 0.75rem 1rem;
   text-align: left;
   font-weight: 600;
-  color: #4a5568;
-  border-bottom: 2px solid #e2e8f0;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
   white-space: nowrap;
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -436,12 +436,12 @@
 .auditTable td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid #f0f4f8;
-  color: #2d3748;
+  color: var(--text);
   vertical-align: middle;
 }
 
 .auditTable tbody tr:hover {
-  background: #f7fafc;
+  background: var(--surface-muted);
 }
 
 .auditTable tbody tr:last-child td {
@@ -464,7 +464,7 @@
 
 .auditDate {
   white-space: nowrap;
-  color: #718096;
+  color: var(--text-muted);
   font-size: 0.8rem;
 }
 

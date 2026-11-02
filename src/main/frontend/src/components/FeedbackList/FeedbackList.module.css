@@ -4,7 +4,7 @@
   background: white;
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .actionError {
@@ -23,12 +23,12 @@
   align-items: center;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid var(--border);
 }
 
 .header h3 {
   margin: 0;
-  color: #1f2937;
+  color: var(--text);
   font-size: 1.5rem;
 }
 
@@ -39,7 +39,7 @@
 }
 
 .avgLabel {
-  color: #6b7280;
+  color: var(--text-muted);
   font-size: 0.95rem;
   font-weight: 500;
 }
@@ -61,7 +61,7 @@
 }
 
 .spinner {
-  border: 4px solid #e5e7eb;
+  border: 4px solid var(--border);
   border-top: 4px solid #7c3aed;
   border-radius: 50%;
   width: 40px;
@@ -79,7 +79,7 @@
 }
 
 .loading p {
-  color: #6b7280;
+  color: var(--text-muted);
   font-size: 1rem;
 }
 
@@ -118,7 +118,7 @@
 .noFeedback {
   text-align: center;
   padding: 3rem 2rem;
-  color: #9ca3af;
+  color: var(--text-faint);
 }
 
 .noFeedback p {
@@ -134,7 +134,7 @@
 }
 
 .feedbackItem {
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border);
   border-radius: 10px;
   padding: 1.25rem;
   transition: all 0.2s;
@@ -148,7 +148,7 @@
 
 .hiddenFeedback {
   opacity: 0.6;
-  background: #f9fafb;
+  background: var(--surface-muted);
 }
 
 .feedbackHeader {
@@ -166,12 +166,12 @@
 
 .userName {
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text);
   font-size: 1rem;
 }
 
 .timestamp {
-  color: #9ca3af;
+  color: var(--text-faint);
   font-size: 0.85rem;
 }
 
@@ -222,13 +222,13 @@
 }
 
 .typeGeneral {
-  background-color: #e5e7eb;
-  color: #4b5563;
+  background-color: var(--border);
+  color: var(--text-secondary);
 }
 
 .visibilityBadge {
-  background-color: #f3f4f6;
-  color: #6b7280;
+  background-color: var(--surface-muted);
+  color: var(--text-muted);
   padding: 0.35rem 0.75rem;
   border-radius: 20px;
   font-size: 0.8rem;
@@ -259,7 +259,7 @@
 /* Comments */
 .comments {
   margin: 0.75rem 0 0 0;
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.6;
   font-size: 0.95rem;
 }
@@ -270,12 +270,12 @@
   gap: 0.5rem;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border);
 }
 
 .actionButton {
   background-color: transparent;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   padding: 0.4rem 0.6rem;
   border-radius: 6px;
   cursor: pointer;
@@ -284,7 +284,7 @@
 }
 
 .actionButton:hover {
-  background-color: #f3f4f6;
+  background-color: var(--surface-muted);
   transform: scale(1.1);
 }
 

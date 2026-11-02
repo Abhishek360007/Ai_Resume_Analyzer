@@ -13,7 +13,27 @@ import {
   selectAuthError,
 } from '@store/selectors/authSelectors'
 import { SESSION_EXPIRED_MESSAGE } from '@/utils/tokenUtils'
+import BrandMark from '@/components/BrandMark/BrandMark'
+import { Eye, EyeOff, FileText, Sparkles, Target } from 'lucide-react'
 import styles from './Login.module.css'
+
+const HIGHLIGHTS = [
+  {
+    icon: Sparkles,
+    title: 'AI resume parsing',
+    text: 'Skills, experience and education extracted from PDF, Word or text in seconds.',
+  },
+  {
+    icon: Target,
+    title: 'Explainable match scores',
+    text: 'Every candidate ranked against your job with clear strengths and gaps.',
+  },
+  {
+    icon: FileText,
+    title: 'Shareable reports',
+    text: 'Export polished PDF match reports for hiring managers.',
+  },
+]
 
 interface LocationState {
   from?: {
@@ -38,6 +58,7 @@ export default function Login() {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   // Redirect to intended destination after successful login
   useEffect(() => {
@@ -66,72 +87,108 @@ export default function Login() {
 
   return (
     <div className={styles.loginContainer}>
-      <div className={styles.loginBox}>
-        <div className={styles.loginHeader}>
-          <h1>AI Resume Analyzer</h1>
-          <p>Sign in to your account</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className={styles.loginForm}>
-          {sessionExpired && !error && (
-            <div className={styles.sessionMessage} role="alert">
-              {SESSION_EXPIRED_MESSAGE}
-            </div>
-          )}
-          {error && (
-            <div className={styles.errorMessage} role="alert">
-              {error}
-            </div>
-          )}
-
-          <div className={styles.formGroup}>
-            <label htmlFor="username">Username</label>
-            <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              disabled={isLoading}
-              required
-              autoComplete="username"
-              autoFocus
-            />
+      <section className={styles.showcase} aria-hidden="true">
+        <div className={styles.showcaseInner}>
+          <div className={styles.showcaseBrand}>
+            <BrandMark size={40} />
+            <span>AI Resume Analyzer</span>
           </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              disabled={isLoading}
-              required
-              autoComplete="current-password"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className={styles.loginButton}
-            disabled={isLoading || !username.trim() || !password.trim()}
-          >
-            {isLoading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <div className={styles.loginFooter}>
-          <p className={styles.testAccounts}>Test Accounts:</p>
-          <ul className={styles.accountList}>
-            <li><strong>Admin:</strong> admin / Admin@123</li>
-            <li><strong>Recruiter:</strong> recruiter / Recruiter@123</li>
-            <li><strong>HR:</strong> hr / HR@123</li>
-            <li><strong>Manager:</strong> hiring_manager / Manager@123</li>
+          <h2 className={styles.showcaseTitle}>
+            Hire smarter with <span>AI‑powered</span> resume intelligence.
+          </h2>
+          <p className={styles.showcaseLead}>
+            Turn a stack of resumes into a ranked, explainable shortlist, in minutes instead of days.
+          </p>
+          <ul className={styles.highlights}>
+            {HIGHLIGHTS.map(({ icon: Icon, title, text }) => (
+              <li key={title}>
+                <span className={styles.highlightIcon}><Icon size={18} /></span>
+                <div>
+                  <strong>{title}</strong>
+                  <p>{text}</p>
+                </div>
+              </li>
+            ))}
           </ul>
         </div>
-      </div>
+        <p className={styles.showcaseFooter}>Built by Abhishek Raj © 2026</p>
+      </section>
+
+      <section className={styles.formPanel}>
+        <div className={styles.loginBox}>
+          <div className={styles.loginHeader}>
+            <BrandMark size={44} className={styles.mobileMark} />
+            <h1>Welcome back</h1>
+            <p>Sign in to AI Resume Analyzer</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className={styles.loginForm}>
+            {sessionExpired && !error && (
+              <div className={styles.sessionMessage} role="alert">
+                {SESSION_EXPIRED_MESSAGE}
+              </div>
+            )}
+            {error && (
+              <div className={styles.errorMessage} role="alert">
+                {error}
+              </div>
+            )}
+
+            <div className={styles.formGroup}>
+              <label htmlFor="username">Username</label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+                disabled={isLoading}
+                required
+                autoComplete="username"
+                autoFocus
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="password">Password</label>
+              <div className={styles.passwordField}>
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  disabled={isLoading}
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className={styles.revealButton}
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className={styles.loginButton}
+              disabled={isLoading || !username.trim() || !password.trim()}
+            >
+              {isLoading && <span className={styles.spinner} aria-hidden="true" />}
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+
+          <p className={styles.loginFooter}>
+            Accounts are created by your administrator.
+          </p>
+        </div>
+      </section>
     </div>
   )
 }

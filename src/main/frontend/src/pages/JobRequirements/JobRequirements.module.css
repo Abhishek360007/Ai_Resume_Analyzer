@@ -1,6 +1,6 @@
 .jobRequirements h2 {
   font-size: 2rem;
-  color: #2d3748;
+  color: var(--text);
 }
 
 .header {
@@ -11,19 +11,19 @@
 }
 
 .createButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary);
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
+  padding: 0.65rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s;
+  box-shadow: var(--shadow-primary);
 }
 
 .createButton:hover {
-  opacity: 0.9;
+  background: var(--primary-hover);
 }
 
 .headerActions {
@@ -34,30 +34,32 @@
 
 .sampleLoadButton,
 .sampleRemoveButton {
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 0.65rem 1.1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s;
+  box-shadow: var(--shadow-xs);
 }
 
 .sampleLoadButton {
-  background: #48bb78;
+  color: var(--text-secondary);
 }
 
-.sampleLoadButton:hover {
-  opacity: 0.9;
+.sampleLoadButton:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--text);
 }
 
 .sampleRemoveButton {
-  background: #fc8181;
+  color: var(--danger);
 }
 
-.sampleRemoveButton:hover {
-  opacity: 0.9;
+.sampleRemoveButton:hover:not(:disabled) {
+  background: var(--danger-soft);
+  border-color: #fecaca;
 }
 
 .sampleLoadButton:disabled,
@@ -111,12 +113,12 @@
 
 .confirmModal h3 {
   font-size: 1.5rem;
-  color: #2d3748;
+  color: var(--text);
   margin-bottom: 1rem;
 }
 
 .confirmModal p {
-  color: #4a5568;
+  color: var(--text-secondary);
   line-height: 1.6;
   font-size: 0.95rem;
   margin-bottom: 2rem;
@@ -139,8 +141,8 @@
 }
 
 .cancelButton {
-  background: #e2e8f0;
-  color: #4a5568;
+  background: var(--border);
+  color: var(--text-secondary);
 }
 
 .cancelButton:hover {
@@ -191,7 +193,7 @@
 
 .formModal h3 {
   font-size: 1.5rem;
-  color: #2d3748;
+  color: var(--text);
   margin-bottom: 1.5rem;
 }
 
@@ -202,7 +204,7 @@
 .formGroup label {
   display: block;
   font-weight: 600;
-  color: #4a5568;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   font-size: 0.875rem;
 }
@@ -212,7 +214,7 @@
 .formGroup select {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   font-size: 1rem;
   font-family: inherit;
@@ -245,12 +247,12 @@
 }
 
 .formActions button[type='button'] {
-  background: #e2e8f0;
-  color: #4a5568;
+  background: var(--border);
+  color: var(--text-secondary);
 }
 
 .submitButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-brand);
   color: white;
 }
 
@@ -260,7 +262,7 @@
 
 .loading {
   text-align: center;
-  color: #718096;
+  color: var(--text-muted);
   padding: 3rem;
   font-size: 1.125rem;
 }
@@ -270,7 +272,7 @@
   padding: 3rem;
   border-radius: 8px;
   text-align: center;
-  color: #718096;
+  color: var(--text-muted);
   font-size: 1.125rem;
 }
 
@@ -281,29 +283,37 @@
 }
 
 .card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), border-color 0.2s var(--ease);
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(79, 70, 229, 0.25);
 }
 
 .cardHeader {
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-  color: white;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(180deg, var(--surface-muted) 0%, var(--surface) 100%);
+  border-bottom: 1px solid var(--border);
+  border-top: 3px solid var(--success);
+  color: var(--text);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
 }
 
 .cardHeader h3 {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 650;
   margin: 0;
 }
 
@@ -316,11 +326,13 @@
 }
 
 .active {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--success-soft);
+  color: #047857;
 }
 
 .inactive {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
 }
 
 .cardBody {
@@ -329,12 +341,12 @@
 
 .info {
   margin-bottom: 0.75rem;
-  color: #2d3748;
+  color: var(--text);
   font-size: 0.875rem;
 }
 
 .info strong {
-  color: #4a5568;
+  color: var(--text-secondary);
   display: inline-block;
   min-width: 100px;
 }
@@ -343,12 +355,12 @@
 .description {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--border);
 }
 
 .skills strong,
 .description strong {
-  color: #4a5568;
+  color: var(--text-secondary);
   display: block;
   margin-bottom: 0.5rem;
   font-size: 0.875rem;
@@ -356,7 +368,7 @@
 
 .skills p,
 .description p {
-  color: #2d3748;
+  color: var(--text);
   line-height: 1.6;
   font-size: 0.875rem;
   margin: 0;
@@ -373,7 +385,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-brand);
   color: white;
   padding: 0.375rem 0.75rem;
   border-radius: 15px;
@@ -390,8 +402,10 @@
 }
 
 .cardFooter {
+  margin-top: auto;
   padding: 1rem 1.5rem;
-  background: #f7fafc;
+  background: var(--surface-muted);
+  border-top: 1px solid var(--border);
   display: flex;
   gap: 0.5rem;
   align-items: center;
@@ -400,9 +414,10 @@
 .feedbackButton,
 .editButton,
 .deleteButton {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  border: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
   cursor: pointer;
   font-size: 0.875rem;
   transition: background 0.2s;
@@ -410,35 +425,35 @@
 }
 
 .feedbackButton {
-  background: #7c3aed;
-  color: white;
+  color: var(--text-secondary);
 }
 
 .feedbackButton:hover {
-  background: #6d28d9;
+  border-color: var(--border-strong);
+  color: var(--text);
 }
 
 .editButton {
-  background: #667eea;
-  color: white;
+  color: var(--primary);
 }
 
 .editButton:hover {
-  background: #5a67d8;
+  background: var(--primary-soft);
+  border-color: rgba(79, 70, 229, 0.3);
 }
 
 .deleteButton {
-  background: #fc8181;
-  color: white;
+  color: var(--danger);
 }
 
 .deleteButton:hover {
-  background: #f56565;
+  background: var(--danger-soft);
+  border-color: #fecaca;
 }
 
 .date {
   margin-left: auto;
-  color: #718096;
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
@@ -491,7 +506,7 @@
 
 .modalHeader {
   padding: 1.5rem 2rem;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -499,7 +514,7 @@
 
 .modalHeader h2 {
   margin: 0;
-  color: #1f2937;
+  color: var(--text);
   font-size: 1.75rem;
 }
 
@@ -508,14 +523,14 @@
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #9ca3af;
+  color: var(--text-faint);
   transition: color 0.2s;
   padding: 0.5rem;
   line-height: 1;
 }
 
 .closeButton:hover {
-  color: #4b5563;
+  color: var(--text-secondary);
 }
 
 .modalBody {

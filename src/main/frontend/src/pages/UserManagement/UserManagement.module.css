@@ -30,13 +30,13 @@
 
 .header h1 {
   font-size: 2rem;
-  color: #1a202c;
+  color: var(--text);
   margin: 0;
 }
 
 .createButton {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-brand);
   color: white;
   border: none;
   border-radius: 6px;
@@ -48,7 +48,7 @@
 
 .createButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-primary);
 }
 
 .createButton:active {
@@ -64,15 +64,15 @@
   width: 100%;
   padding: 0.75rem 1rem;
   font-size: 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border);
   border-radius: 8px;
   transition: all 0.2s;
 }
 
 .searchInput:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 /* Loading State */
@@ -88,8 +88,8 @@
 .spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid #e2e8f0;
-  border-top-color: #667eea;
+  border: 4px solid var(--border);
+  border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -131,10 +131,10 @@
 /* Table */
 .tableContainer {
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .table {
@@ -143,7 +143,7 @@
 }
 
 .table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-brand);
   color: white;
 }
 
@@ -158,7 +158,7 @@
 
 .table td {
   padding: 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
 }
 
 .table tbody tr {
@@ -166,7 +166,7 @@
 }
 
 .table tbody tr:hover {
-  background-color: #f7fafc;
+  background-color: var(--surface-muted);
 }
 
 .table tbody tr:last-child td {
@@ -176,11 +176,11 @@
 /* Table Cells */
 .username {
   font-weight: 600;
-  color: #2d3748;
+  color: var(--text);
 }
 
 .timestamp {
-  color: #718096;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -233,8 +233,8 @@
 
 .actionButton {
   padding: 0.5rem;
-  background: #f7fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 1.1rem;
   cursor: pointer;
@@ -242,7 +242,7 @@
 }
 
 .actionButton:hover {
-  background: #edf2f7;
+  background: var(--border);
   transform: scale(1.1);
 }
 
@@ -300,7 +300,7 @@
 
 .modalContent h2 {
   margin: 0 0 1.5rem 0;
-  color: #1a202c;
+  color: var(--text);
   font-size: 1.5rem;
 }
 
@@ -313,7 +313,7 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--text);
   font-size: 0.95rem;
 }
 
@@ -322,7 +322,7 @@
   width: 100%;
   padding: 0.75rem;
   font-size: 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border);
   border-radius: 6px;
   transition: all 0.2s;
 }
@@ -330,8 +330,8 @@
 .formGroup input:focus,
 .formGroup select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 .checkboxLabel {
@@ -365,22 +365,22 @@
 }
 
 .modalActions button[type='button'] {
-  background: #edf2f7;
-  color: #2d3748;
+  background: var(--border);
+  color: var(--text);
 }
 
 .modalActions button[type='button']:hover {
-  background: #e2e8f0;
+  background: var(--border);
 }
 
 .submitButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-brand);
   color: white;
 }
 
 .submitButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-primary);
 }
 
 .deleteConfirmButton {

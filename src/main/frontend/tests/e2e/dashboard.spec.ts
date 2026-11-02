@@ -75,6 +75,6 @@ test.describe('Dashboard', () => {
     const footer = page.locator('footer');
     await expect(footer).toBeVisible();
     await expect(footer).toContainText(/Resume Analyzer/);
-    await expect(footer).toContainText(/2025/);
+    await expect(footer).toContainText(/2026/);
   });
 });

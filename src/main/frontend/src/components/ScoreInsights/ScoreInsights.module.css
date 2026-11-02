@@ -2,13 +2,13 @@
   background: white;
   padding: 1.5rem;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 2rem;
 }
 
 .insights h3 {
   font-size: 1.25rem;
-  color: #2d3748;
+  color: var(--text);
   margin: 0 0 1rem 0;
 }
 
@@ -21,7 +21,7 @@
 .panel h4 {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #4a5568;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0 0 0.75rem 0;
@@ -37,31 +37,31 @@
 
 .gridLine {
   fill: none;
-  stroke: #e2e8f0;
+  stroke: var(--border);
   stroke-width: 1;
 }
 
 .axisLabel {
   font-size: 11px;
   font-weight: 600;
-  fill: #4a5568;
+  fill: var(--text-secondary);
 }
 
 .poolShape {
   fill: rgba(160, 174, 192, 0.25);
-  stroke: #a0aec0;
+  stroke: var(--text-faint);
   stroke-width: 2;
   stroke-dasharray: 4 3;
 }
 
 .topShape {
-  fill: rgba(102, 126, 234, 0.25);
-  stroke: #667eea;
+  fill: rgba(79, 70, 229, 0.25);
+  stroke: var(--primary);
   stroke-width: 2;
 }
 
 .topDot {
-  fill: #667eea;
+  fill: var(--primary);
 }
 
 .legend {
@@ -73,7 +73,7 @@
   padding: 0;
   margin: 0.75rem 0 0 0;
   font-size: 0.875rem;
-  color: #4a5568;
+  color: var(--text-secondary);
 }
 
 .legend li {
@@ -90,12 +90,12 @@
 }
 
 .topSwatch {
-  background: #667eea;
+  background: var(--primary);
 }
 
 .poolSwatch {
   background: rgba(160, 174, 192, 0.5);
-  border: 2px dashed #a0aec0;
+  border: 2px dashed var(--text-faint);
 }
 
 .bands {
@@ -115,13 +115,13 @@
 }
 
 .bandLabel {
-  color: #4a5568;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
 .bandTrack {
   height: 14px;
-  background: #edf2f7;
+  background: var(--border);
   border-radius: 7px;
   overflow: hidden;
 }
@@ -136,7 +136,7 @@
 .bandCount {
   text-align: right;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--text);
 }
 
 .excellent {
@@ -158,11 +158,11 @@
 .callout {
   margin: 1.25rem 0 0 0;
   padding: 0.75rem 1rem;
-  background: #f7fafc;
-  border-left: 4px solid #667eea;
+  background: var(--surface-muted);
+  border-left: 4px solid var(--primary);
   border-radius: 4px;
   font-size: 0.875rem;
-  color: #4a5568;
+  color: var(--text-secondary);
 }
 
 @media (max-width: 480px) {

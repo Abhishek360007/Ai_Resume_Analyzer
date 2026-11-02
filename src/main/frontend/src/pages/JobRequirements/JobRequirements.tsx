@@ -381,7 +381,7 @@ const JobRequirements = () => {
               </div>
               <div className={styles.cardFooter}>
                 <button className={styles.feedbackButton} onClick={() => handleOpenFeedback(job.id)}>
-                  💬 Feedback
+                  Feedback
                 </button>
                 {canManageJobs && (
                   <button className={styles.editButton} onClick={() => handleEdit(job)}>

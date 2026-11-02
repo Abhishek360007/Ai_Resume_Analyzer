@@ -4,12 +4,12 @@
   background: white;
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .feedbackForm h3 {
   margin: 0 0 1.5rem 0;
-  color: #1f2937;
+  color: var(--text);
   font-size: 1.5rem;
 }
 
@@ -31,7 +31,7 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-secondary);
   font-size: 0.95rem;
 }
 
@@ -39,7 +39,7 @@
 .formGroup textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.2s;
@@ -61,7 +61,7 @@
 
 .formGroup select:disabled,
 .formGroup textarea:disabled {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   cursor: not-allowed;
 }
 
@@ -110,7 +110,7 @@
   gap: 1rem;
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border);
 }
 
 .formActions button {
@@ -124,12 +124,12 @@
 }
 
 .cancelButton {
-  background-color: #f3f4f6;
-  color: #4b5563;
+  background-color: var(--surface-muted);
+  color: var(--text-secondary);
 }
 
 .cancelButton:hover:not(:disabled) {
-  background-color: #e5e7eb;
+  background-color: var(--border);
 }
 
 .submitButton {

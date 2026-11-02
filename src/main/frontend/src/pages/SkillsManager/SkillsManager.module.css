@@ -13,12 +13,12 @@
 
 .header h2 {
   font-size: 2rem;
-  color: #2d3748;
+  color: var(--text);
   margin: 0;
 }
 
 .addButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-brand);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -75,13 +75,13 @@
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .addForm h3 {
   margin-top: 0;
   margin-bottom: 1.5rem;
-  color: #2d3748;
+  color: var(--text);
   font-size: 1.25rem;
 }
 
@@ -99,22 +99,22 @@
 
 .formGroup label {
   font-weight: 600;
-  color: #4a5568;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   font-size: 0.875rem;
 }
 
 .formGroup input {
   padding: 0.5rem;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--border-strong);
   border-radius: 4px;
   font-size: 0.875rem;
 }
 
 .formGroup input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 .formActions {
@@ -135,12 +135,12 @@
 }
 
 .saveButton {
-  background: #667eea;
+  background: var(--primary);
   color: white;
 }
 
 .saveButton:hover:not(:disabled) {
-  background: #5a67d8;
+  background: var(--primary-hover);
 }
 
 .saveButton:disabled {
@@ -149,18 +149,18 @@
 }
 
 .cancelButton {
-  background: #e2e8f0;
-  color: #4a5568;
+  background: var(--border);
+  color: var(--text-secondary);
 }
 
 .cancelButton:hover {
-  background: #cbd5e0;
+  background: var(--border-strong);
 }
 
 .loading {
   text-align: center;
   padding: 3rem;
-  color: #718096;
+  color: var(--text-muted);
   font-size: 1.125rem;
 }
 
@@ -169,14 +169,14 @@
   padding: 3rem;
   border-radius: 8px;
   text-align: center;
-  color: #718096;
+  color: var(--text-muted);
   font-size: 1.125rem;
 }
 
 .tableContainer {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -186,7 +186,7 @@
 }
 
 .table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-brand);
   color: white;
 }
 
@@ -200,12 +200,12 @@
 }
 
 .table tbody tr {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
   transition: background-color 0.2s;
 }
 
 .table tbody tr:hover {
-  background-color: #f7fafc;
+  background-color: var(--surface-muted);
 }
 
 .table tbody tr.editing {
@@ -214,17 +214,17 @@
 
 .table td {
   padding: 1rem;
-  color: #2d3748;
+  color: var(--text);
   font-size: 0.875rem;
 }
 
 .nameCell {
   font-weight: 600;
-  color: #1a202c;
+  color: var(--text);
 }
 
 .descCell {
-  color: #718096;
+  color: var(--text-muted);
   max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -234,15 +234,15 @@
 .editInput {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--border-strong);
   border-radius: 4px;
   font-size: 0.875rem;
 }
 
 .editInput:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 .checkboxLabel {
@@ -294,12 +294,12 @@
 }
 
 .editBtn {
-  background: #667eea;
+  background: var(--primary);
   color: white;
 }
 
 .editBtn:hover:not(:disabled) {
-  background: #5a67d8;
+  background: var(--primary-hover);
 }
 
 .editBtn:disabled {
@@ -336,12 +336,12 @@
 }
 
 .cancelBtn {
-  background: #e2e8f0;
-  color: #4a5568;
+  background: var(--border);
+  color: var(--text-secondary);
 }
 
 .cancelBtn:hover {
-  background: #cbd5e0;
+  background: var(--border-strong);
 }
 
 /* Pagination styles */
@@ -351,26 +351,26 @@
   justify-content: center;
   gap: 1rem;
   padding: 1.5rem;
-  border-top: 1px solid #e2e8f0;
-  background: #f7fafc;
+  border-top: 1px solid var(--border);
+  background: var(--surface-muted);
 }
 
 .pageButton {
   padding: 0.5rem 1rem;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--border-strong);
   background: white;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #4a5568;
+  color: var(--text-secondary);
   transition: all 0.2s;
 }
 
 .pageButton:hover:not(:disabled) {
-  background: #667eea;
+  background: var(--primary);
   color: white;
-  border-color: #667eea;
+  border-color: var(--primary);
 }
 
 .pageButton:disabled {
@@ -386,13 +386,13 @@
 .pageNumber {
   width: 36px;
   height: 36px;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--border-strong);
   background: white;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #4a5568;
+  color: var(--text-secondary);
   transition: all 0.2s;
   display: flex;
   align-items: center;
@@ -400,19 +400,19 @@
 }
 
 .pageNumber:hover {
-  background: #e2e8f0;
-  border-color: #a0aec0;
+  background: var(--border);
+  border-color: var(--text-faint);
 }
 
 .pageNumber.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-brand);
   color: white;
-  border-color: #667eea;
+  border-color: var(--primary);
 }
 
 .pageInfo {
   font-size: 0.875rem;
-  color: #718096;
+  color: var(--text-muted);
   margin-left: 0.5rem;
 }
 

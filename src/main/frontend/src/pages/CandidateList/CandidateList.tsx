@@ -19,6 +19,7 @@ import FeedbackList from '@/components/FeedbackList/FeedbackList'
 import FeedbackForm from '@/components/FeedbackForm/FeedbackForm'
 import { EntityType } from '@/components/FeedbackForm/FeedbackForm'
 import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog'
+import { Globe, MessageSquare, Trash2 } from 'lucide-react'
 import styles from './CandidateList.module.css'
 
 const CandidateList = () => {
@@ -216,15 +217,17 @@ const CandidateList = () => {
                   className={styles.feedbackButton}
                   onClick={() => handleOpenFeedback(candidate.id)}
                   title="Feedback"
+                  aria-label="Feedback"
                 >
-                  💬
+                  <MessageSquare size={16} />
                 </button>
                 <button
                   className={styles.enrichButton}
                   onClick={() => handleToggleEnrichment(candidate.id)}
                   title="External Profiles"
+                  aria-label="External Profiles"
                 >
-                  🔍
+                  <Globe size={16} />
                   {profilesByCandidateId[candidate.id]?.some((p) => p.status === 'SUCCESS') && (
                     <span className={styles.enrichedBadge}>✓</span>
                   )}
@@ -233,8 +236,9 @@ const CandidateList = () => {
                   className={styles.deleteButton}
                   onClick={() => setDeleteTargetId(candidate.id)}
                   title="Delete candidate"
+                  aria-label="Delete candidate"
                 >
-                  🗑️
+                  <Trash2 size={16} />
                 </button>
                 <span className={styles.date}>
                   {new Date(candidate.createdAt).toLocaleDateString()}
