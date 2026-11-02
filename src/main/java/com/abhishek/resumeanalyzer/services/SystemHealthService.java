@@ -46,6 +46,10 @@ public class SystemHealthService {
     @Value("${app.llm.provider-name:LM Studio}")
     private String llmProviderName;
 
+    /** Model-listing path probed by the health check; differs for providers such as Gemini. */
+    @Value("${app.llm.models-path:/v1/models}")
+    private String llmModelsPath;
+
     private static final int TIMEOUT_MS = 5000;
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -127,7 +131,8 @@ public class SystemHealthService {
         SystemHealth health = getOrCreateHealthRecord("llm-studio", llmProviderName + " API");
 
         String baseUrl = StringUtils.hasText(llmStudioBaseUrl) ? llmStudioBaseUrl : "http://localhost:1234";
-        String modelsUrl = baseUrl.endsWith("/") ? baseUrl + "v1/models" : baseUrl + "/v1/models";
+        String modelsPath = StringUtils.hasText(llmModelsPath) ? llmModelsPath : "/v1/models";
+        String modelsUrl = baseUrl.replaceAll("/+$", "") + (modelsPath.startsWith("/") ? modelsPath : "/" + modelsPath);
 
         try {
             HttpHeaders headers = new HttpHeaders();

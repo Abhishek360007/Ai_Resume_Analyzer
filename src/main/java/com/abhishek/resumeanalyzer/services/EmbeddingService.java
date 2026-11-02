@@ -111,7 +111,41 @@ public class EmbeddingService {
      * Tries embedForResponse first, falls back to per-text embed() on failure.
      */
     private List<float[]> generateEmbeddingsWithFallback(List<String> texts) {
-        return requireVectors(texts.size(), embedWithFallback(texts));
+        return requireVectors(texts.size(), embedWithFallback(texts)).stream()
+                .map(EmbeddingService::fitToColumnSize)
+                .toList();
+    }
+
+    /** Size of the resume_embeddings.embedding vector column. */
+    static final int VECTOR_DIMENSIONS = 768;
+
+    /**
+     * Fit a vector to the database column size. Longer vectors (e.g. Gemini's 3072-dim
+     * embeddings when the provider ignores the requested size) are truncated and
+     * re-normalised, which is valid for Matryoshka-trained models such as
+     * gemini-embedding-001 and OpenAI text-embedding-3. Shorter vectors cannot be fixed.
+     */
+    static float[] fitToColumnSize(float[] vector) {
+        if (vector.length == VECTOR_DIMENSIONS) {
+            return vector;
+        }
+        if (vector.length < VECTOR_DIMENSIONS) {
+            throw new LlmServiceException("Embedding model returned " + vector.length + " dimensions but "
+                    + VECTOR_DIMENSIONS + " are required - choose an embedding model with at least "
+                    + VECTOR_DIMENSIONS + " dimensions");
+        }
+        float[] truncated = Arrays.copyOf(vector, VECTOR_DIMENSIONS);
+        double norm = 0;
+        for (float value : truncated) {
+            norm += value * value;
+        }
+        norm = Math.sqrt(norm);
+        if (norm > 0) {
+            for (int i = 0; i < truncated.length; i++) {
+                truncated[i] = (float) (truncated[i] / norm);
+            }
+        }
+        return truncated;
     }
 
     /**

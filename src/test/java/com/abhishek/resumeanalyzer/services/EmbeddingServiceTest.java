@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
@@ -287,7 +288,9 @@ class EmbeddingServiceTest {
     void shouldConvertFloatArrayToVectorString() {
         // Given
         String queryText = "test query";
-        float[] embedding = new float[]{0.1f, 0.2f, 0.3f, 0.4f, 0.5f};
+        float[] embedding = new float[EmbeddingService.VECTOR_DIMENSIONS];
+        embedding[0] = 0.1f;
+        embedding[4] = 0.5f;
         EmbeddingResponse mockResponse = new EmbeddingResponse(
                 List.of(new Embedding(embedding, 0))
         );
@@ -333,10 +336,43 @@ class EmbeddingServiceTest {
      * Helper method to create a mock embedding vector
      */
     private float[] createMockEmbedding() {
-        float[] embedding = new float[384]; // Standard small embedding size
+        float[] embedding = new float[EmbeddingService.VECTOR_DIMENSIONS]; // Matches the vector(768) column
         for (int i = 0; i < embedding.length; i++) {
             embedding[i] = (float) (Math.random() - 0.5);
         }
         return embedding;
+    }
+
+    @Test
+    @DisplayName("Keeps vectors that already match the column size")
+    void fitToColumnSize_keepsExactSize() {
+        float[] vector = new float[EmbeddingService.VECTOR_DIMENSIONS];
+        vector[0] = 1f;
+
+        assertThat(EmbeddingService.fitToColumnSize(vector)).isSameAs(vector);
+    }
+
+    @Test
+    @DisplayName("Truncates and re-normalises longer vectors such as Gemini's 3072 dimensions")
+    void fitToColumnSize_truncatesAndNormalises() {
+        float[] vector = new float[3072];
+        java.util.Arrays.fill(vector, 0.5f);
+
+        float[] fitted = EmbeddingService.fitToColumnSize(vector);
+
+        assertThat(fitted).hasSize(EmbeddingService.VECTOR_DIMENSIONS);
+        double norm = 0;
+        for (float v : fitted) {
+            norm += v * v;
+        }
+        assertThat(Math.sqrt(norm)).isCloseTo(1.0, org.assertj.core.data.Offset.offset(1e-5));
+    }
+
+    @Test
+    @DisplayName("Rejects vectors shorter than the column size with a clear message")
+    void fitToColumnSize_rejectsShorterVectors() {
+        assertThatThrownBy(() -> EmbeddingService.fitToColumnSize(new float[384]))
+                .isInstanceOf(com.abhishek.resumeanalyzer.exceptions.LlmServiceException.class)
+                .hasMessageContaining("384 dimensions");
     }
 }

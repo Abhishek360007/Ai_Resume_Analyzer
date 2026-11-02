@@ -1,0 +1,34 @@
+# LLM provider profile: Google Gemini (free tier available, no card needed)
+# Activate with SPRING_PROFILES_ACTIVE=gemini and set GEMINI_API_KEY
+# (create one at https://aistudio.google.com/apikey).
+#
+# Gemini exposes an OpenAI-compatible API under /v1beta/openai, so the paths below
+# replace the /v1/... paths Spring AI uses by default.
+#
+# Note: on the free tier Google may use submitted content to improve its products,
+# so use it with sample data rather than real candidates' resumes.
+spring:
+  ai:
+    openai:
+      base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+      # Placeholder keeps the app bootable before a key is configured; AI calls then
+      # fail with a clear authentication error instead of the app failing to start.
+      api-key: ${GEMINI_API_KEY:missing-gemini-api-key}
+      chat:
+        completions-path: /v1beta/openai/chat/completions
+        options:
+          # Flash-Lite answers without "thinking" tokens, which could otherwise use up
+          # the output budget and cut off the JSON this app parses
+          model: ${GEMINI_MODEL:gemini-2.5-flash-lite}
+      embedding:
+        embeddings-path: /v1beta/openai/embeddings
+        options:
+          model: ${GEMINI_EMBEDDING_MODEL:gemini-embedding-001}
+          # Requested size of the vector(768) column; longer vectors are also shortened
+          # by EmbeddingService if the provider ignores this
+          dimensions: 768
+
+app:
+  llm:
+    provider-name: Google Gemini
+    models-path: /v1beta/openai/models

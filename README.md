@@ -128,7 +128,7 @@ See [docs/DOCKER-DEPLOYMENT.md](docs/DOCKER-DEPLOYMENT.md) for details.
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Abhishek360007/Ai_Resume_Analyzer)
 
-The [render.yaml](render.yaml) Blueprint creates a PostgreSQL database and a Docker web service that runs the OpenAI profile. Render asks for your `OPENAI_API_KEY` during setup. After the first deploy, log in as `admin` and change every default password under **User Management**.
+The [render.yaml](render.yaml) Blueprint creates a PostgreSQL database and a Docker web service that uses Google Gemini, which has a free tier. Create a key at [Google AI Studio](https://aistudio.google.com/apikey) and set it as `GEMINI_API_KEY` in the service's **Environment** tab. After the first deploy, log in as `admin` and change every default password under **User Management**.
 
 ### Production build
 
@@ -146,12 +146,15 @@ All providers go through Spring AI's OpenAI-compatible client, so you switch pro
 | LM Studio (default) | nothing to do | `LLM_STUDIO_BASE_URL`, `LLM_STUDIO_MODEL`, `LLM_STUDIO_EMBEDDING_MODEL` |
 | Ollama | `SPRING_PROFILES_ACTIVE=ollama` | `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `OLLAMA_EMBEDDING_MODEL` |
 | OpenAI | `SPRING_PROFILES_ACTIVE=openai` | `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_EMBEDDING_MODEL` |
+| Google Gemini (free tier) | `SPRING_PROFILES_ACTIVE=gemini` | `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_EMBEDDING_MODEL` |
 
 ```bash
 # Example: run with Ollama
 ollama pull llama3.1:8b && ollama pull nomic-embed-text
 SPRING_PROFILES_ACTIVE=ollama mvn spring-boot:run
 ```
+
+**Gemini free tier:** no card is needed, but Google may use submitted content to improve its products, so use sample resumes rather than real candidates' data.
 
 Embeddings are stored in a `vector(768)` column. `nomic-embed-text` produces 768 dimensions natively, and the OpenAI profile asks `text-embedding-3-small` for 768 dimensions. The admin dashboard health check reports the active provider by name.
 

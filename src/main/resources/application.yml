@@ -90,6 +90,7 @@ app:
   # Display name of the active LLM provider (overridden by the ollama / openai profiles)
   llm:
     provider-name: ${LLM_PROVIDER_NAME:LM Studio}
+    models-path: /v1/models
   upload:
     directory: ${UPLOAD_DIR:./uploads}
     allowed-extensions: .doc,.docx,.pdf,.txt

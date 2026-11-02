@@ -3,7 +3,9 @@
 #
 # Creates a PostgreSQL database (pgvector is enabled by the Flyway migration)
 # and a Docker web service that serves both the API and the React frontend.
-# You will be asked for OPENAI_API_KEY when the Blueprint is applied.
+# The AI provider is Google Gemini (free tier, key from https://aistudio.google.com/apikey).
+# Set GEMINI_API_KEY in the service's Environment tab. To use OpenAI instead, set
+# SPRING_PROFILES_ACTIVE=openai and OPENAI_API_KEY.
 
 databases:
   - name: resume-analyzer-db
@@ -24,7 +26,9 @@ services:
     autoDeploy: true
     envVars:
       - key: SPRING_PROFILES_ACTIVE
-        value: openai
+        value: gemini
+      - key: GEMINI_API_KEY
+        sync: false
       - key: OPENAI_API_KEY
         sync: false
       - key: JWT_SECRET
