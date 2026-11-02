@@ -119,8 +119,9 @@ public class ResumeJobProcessor {
             ResumeAnalysisResponse analysisResponse = aiService.analyzeResume(analysisRequest);
             if (analysisResponse.isFallback()) {
                 // Never save an "Unknown" placeholder candidate; let the job retry and then fail visibly
-                throw new LlmServiceException("AI analysis unavailable for " + filename
-                        + " - check the AI provider connection and API credit");
+                throw new LlmServiceException("AI analysis unavailable for " + filename + ": "
+                        + (analysisResponse.getFailureReason() != null ? analysisResponse.getFailureReason()
+                                : "check the AI provider connection and API key"));
             }
             log.info("AI analysis complete: jobId={}, candidateName={}, skillsPresent={}", 
                      jobId, analysisResponse.getName(), 

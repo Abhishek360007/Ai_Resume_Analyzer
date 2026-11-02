@@ -84,6 +84,7 @@ public class AIService {
         } catch (LlmServiceException e) {
             log.warn("LLM unavailable during resume analysis — returning fallback. Reason: {}", e.getMessage());
             return ResumeAnalysisResponse.builder()
+                    .failureReason(summarizeError(e))
                     .name("Unknown")
                     .email("")
                     .mobile("")
@@ -142,6 +143,7 @@ public class AIService {
         } catch (LlmServiceException e) {
             log.warn("LLM unavailable during candidate matching — returning fallback. Reason: {}", e.getMessage());
             return CandidateMatchResponse.builder()
+                    .failureReason(summarizeError(e))
                     .matchScore(0.0)
                     .skillsScore(0.0)
                     .experienceScore(0.0)
@@ -320,15 +322,19 @@ public class AIService {
      * Returns a safe fallback when the LLM is unreachable or the response is malformed.
      */
     private ResumeAnalysisResponse parseResumeAnalysisResponse(String rawResponse) {
+        String reason;
         try {
             String json = extractJson(rawResponse);
             return objectMapper.readValue(json, ResumeAnalysisResponse.class);
         } catch (LlmServiceException e) {
             log.warn("LLM unavailable during resume analysis — returning fallback. Reason: {}", e.getMessage());
+            reason = summarizeError(e);
         } catch (Exception e) {
             log.error("Failed to parse LLM resume-analysis response. Raw response: {}", rawResponse, e);
+            reason = "the AI reply was not valid JSON";
         }
         return ResumeAnalysisResponse.builder()
+                .failureReason(reason)
                 .name("Unknown")
                 .email("")
                 .mobile("")
@@ -347,15 +353,19 @@ public class AIService {
      * Returns a safe fallback when the LLM is unreachable or the response is malformed.
      */
     private CandidateMatchResponse parseMatchingResponse(String rawResponse) {
+        String reason;
         try {
             String json = extractJson(rawResponse);
             return objectMapper.readValue(json, CandidateMatchResponse.class);
         } catch (LlmServiceException e) {
             log.warn("LLM unavailable during candidate matching — returning fallback. Reason: {}", e.getMessage());
+            reason = summarizeError(e);
         } catch (Exception e) {
             log.error("Failed to parse LLM candidate-matching response. Raw response: {}", rawResponse, e);
+            reason = "the AI reply was not valid JSON";
         }
         return CandidateMatchResponse.builder()
+                .failureReason(reason)
                 .matchScore(0.0)
                 .skillsScore(0.0)
                 .experienceScore(0.0)
@@ -367,6 +377,32 @@ public class AIService {
                 .recommendation("Error in Analysis")
                 .fallback(true)
                 .build();
+    }
+
+    /**
+     * Condense an LLM failure into one line a user can act on. Provider errors usually
+     * embed a JSON body such as {"error": {"message": "API key not valid"}}; its message
+     * is far more useful than the full exception text.
+     */
+    private static final java.util.regex.Pattern PROVIDER_MESSAGE =
+            java.util.regex.Pattern.compile("\"message\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
+    private static final java.util.regex.Pattern HTTP_STATUS_PREFIX = java.util.regex.Pattern.compile("^(\\d{3})\\b");
+    private static final java.util.regex.Pattern WHITESPACE = java.util.regex.Pattern.compile("\\s+");
+
+    static String summarizeError(Throwable error) {
+        Throwable root = error;
+        while (root.getCause() != null && root.getCause() != root) {
+            root = root.getCause();
+        }
+        String text = String.valueOf(root.getMessage() != null ? root.getMessage() : error.getMessage());
+        java.util.regex.Matcher providerMessage = PROVIDER_MESSAGE.matcher(text);
+        String summary = providerMessage.find() ? providerMessage.group(1) : text;
+        java.util.regex.Matcher status = HTTP_STATUS_PREFIX.matcher(text.trim());
+        if (status.find() && !summary.startsWith(status.group(1))) {
+            summary = "HTTP " + status.group(1) + ": " + summary;
+        }
+        summary = WHITESPACE.matcher(summary).replaceAll(" ").trim();
+        return summary.length() > 240 ? summary.substring(0, 237) + "..." : summary;
     }
 
     /**

@@ -307,8 +307,9 @@ public class CandidateMatchingService {
         CandidateMatchResponse response = aiService.matchCandidate(matchRequest);
         if (response.isFallback()) {
             // Never persist placeholder 0% scores as if they were a real evaluation
-            throw new LlmServiceException("AI matching is unavailable right now - check the AI provider "
-                    + "connection and API credit, then try again");
+            throw new LlmServiceException("AI matching is unavailable right now: "
+                    + (response.getFailureReason() != null ? response.getFailureReason()
+                            : "check the AI provider connection and API key"));
         }
         return response;
     }

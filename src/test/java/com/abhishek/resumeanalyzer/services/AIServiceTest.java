@@ -245,4 +245,37 @@ class AIServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getName()).isEqualTo("Jane Smith");
     }
+
+    @Test
+    @DisplayName("Condenses a provider error to its JSON message and HTTP status")
+    void summarizeErrorExtractsProviderMessage() {
+        RuntimeException providerError = new RuntimeException("401 - [{\n  \"error\": {\n    \"code\": 400,\n"
+                + "    \"message\": \"API key not valid. Please pass a valid API key.\",\n"
+                + "    \"status\": \"INVALID_ARGUMENT\"\n  }\n}]");
+        Exception wrapped = new com.abhishek.resumeanalyzer.exceptions.LlmServiceException(
+                "LLM API call failed: " + providerError.getMessage(), providerError);
+
+        assertThat(AIService.summarizeError(wrapped))
+                .isEqualTo("HTTP 401: API key not valid. Please pass a valid API key.");
+    }
+
+    @Test
+    @DisplayName("Keeps plain error text and limits its length")
+    void summarizeErrorFallsBackToPlainText() {
+        assertThat(AIService.summarizeError(new RuntimeException("Connection refused:   no further information")))
+                .isEqualTo("Connection refused: no further information");
+        assertThat(AIService.summarizeError(new RuntimeException("x".repeat(500)))).hasSize(240).endsWith("...");
+    }
+
+    @Test
+    @DisplayName("Fallback responses carry the failure reason")
+    void fallbackCarriesReason() {
+        stubChatClientException(new RuntimeException(
+                "429 - {\"error\": {\"message\": \"Resource has been exhausted (e.g. check quota).\"}}"));
+
+        ResumeAnalysisResponse result = aiService.analyzeResume(resumeAnalysisRequest);
+
+        assertThat(result.isFallback()).isTrue();
+        assertThat(result.getFailureReason()).isEqualTo("HTTP 429: Resource has been exhausted (e.g. check quota).");
+    }
 }

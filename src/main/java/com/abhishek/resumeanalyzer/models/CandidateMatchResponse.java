@@ -68,4 +68,8 @@ public class CandidateMatchResponse {
     @JsonIgnore
     @Builder.Default
     private boolean fallback = false;
+
+    /** Why the LLM call failed (provider error message), when {@link #fallback} is true. */
+    @JsonIgnore
+    private String failureReason;
 }
