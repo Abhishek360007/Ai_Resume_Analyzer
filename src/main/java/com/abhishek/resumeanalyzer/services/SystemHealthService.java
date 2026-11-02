@@ -173,6 +173,11 @@ public class SystemHealthService {
         } catch (ResourceAccessException e) {
             long errorTime = System.currentTimeMillis() - startTime;
             String message = llmProviderName + " is not running or not accessible at " + baseUrl;
+            if (baseUrl.contains("localhost") || baseUrl.contains("127.0.0.1")) {
+                // On a hosted deployment this almost always means no provider profile is active
+                message += ". If this server is hosted, no AI provider is configured: set SPRING_PROFILES_ACTIVE "
+                        + "to gemini or openai and add its API key";
+            }
             health.recordFailure(errorTime, message);
             log.warn("LLM Studio health check: NOT RUNNING at {} (expected if LM Studio is not started)", baseUrl);
         } catch (Exception e) {
