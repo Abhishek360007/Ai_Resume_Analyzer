@@ -17,9 +17,12 @@ spring:
       chat:
         completions-path: /v1beta/openai/chat/completions
         options:
-          # Flash-Lite answers without "thinking" tokens, which could otherwise use up
-          # the output budget and cut off the JSON this app parses
-          model: ${GEMINI_MODEL:gemini-2.5-flash-lite}
+          # Google retires older models for new accounts (2.5 Flash-Lite already is), so
+          # the model is overridable with GEMINI_MODEL without a code change
+          model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
+          # Gemini 3 models always "think"; keep it minimal so thinking tokens cannot use
+          # up the output budget and cut off the JSON this app parses
+          reasoning-effort: ${GEMINI_REASONING_EFFORT:minimal}
       embedding:
         embeddings-path: /v1beta/openai/embeddings
         options:
