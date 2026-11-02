@@ -159,10 +159,14 @@ public class UserResolver {
     @PreAuthorize("hasRole('ADMIN')")
     public Boolean resetUserPassword(@Argument UUID id, @Argument String newPassword) {
         log.info("Resetting password for user: {}", id);
-        // Verify user exists
-        userService.getUserById(id)
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters");
+        }
+        User currentAdmin = SecurityUtils.getCurrentUser()
+                .orElseThrow(() -> new RuntimeException("Not authenticated"));
+        User user = userService.getUserById(id)
                 .orElseThrow(() -> new RuntimeException("User not found: " + id));
-        // Password reset is handled by the AuthenticationService
+        authenticationService.resetPassword(user, newPassword, currentAdmin, null);
         return true;
     }
 }
