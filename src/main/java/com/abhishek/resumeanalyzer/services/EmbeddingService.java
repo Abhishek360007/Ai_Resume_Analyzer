@@ -28,6 +28,7 @@ public class EmbeddingService {
 
     private final ResumeEmbeddingRepository embeddingRepository;
     private final EmbeddingModel embeddingModel;
+    private final DirectEmbeddingClient directEmbeddingClient;
 
     @Value("${app.embedding.batch-size:10}")
     private Integer batchSize;
@@ -107,8 +108,8 @@ public class EmbeddingService {
     }
 
     /**
-     * Generate embeddings with fallback to avoid Spring AI M4 usage-null issue.
-     * Tries embedForResponse first, falls back to per-text embed() on failure.
+     * Generate embeddings, falling back to a direct API call when Spring AI fails on a
+     * response without a "usage" block, then fit each vector to the database column.
      */
     private List<float[]> generateEmbeddingsWithFallback(List<String> texts) {
         return requireVectors(texts.size(), embedWithFallback(texts)).stream()
@@ -167,19 +168,10 @@ public class EmbeddingService {
                     .map(e -> e.getOutput())
                     .toList();
         } catch (IllegalArgumentException | NullPointerException e) {
-            log.warn("embedForResponse failed ({}), falling back to single embed()", e.getMessage());
-            // Fallback: call embed() per text (bypasses usage checks)
-            List<float[]> results = new ArrayList<>();
-            for (String text : texts) {
-                try {
-                    float[] vec = embeddingModel.embed(text);
-                    results.add(vec);
-                } catch (Exception inner) {
-                    // A zero vector would silently corrupt semantic search, so fail and let the job retry
-                    throw new LlmServiceException("Embedding generation failed: " + inner.getMessage(), inner);
-                }
-            }
-            return results;
+            // Spring AI M6 fails on responses without a "usage" block (e.g. Google Gemini);
+            // embed() goes through the same code, so call the endpoint directly instead
+            log.warn("Spring AI embedding call failed ({}), using direct embeddings request", e.getMessage());
+            return directEmbeddingClient.embed(texts);
         }
     }
 

@@ -40,6 +40,9 @@ class EmbeddingServiceTest {
     @Mock
     private EmbeddingModel embeddingModel;
 
+    @Mock
+    private DirectEmbeddingClient directEmbeddingClient;
+
     @InjectMocks
     private EmbeddingService embeddingService;
 
@@ -374,5 +377,20 @@ class EmbeddingServiceTest {
         assertThatThrownBy(() -> EmbeddingService.fitToColumnSize(new float[384]))
                 .isInstanceOf(com.abhishek.resumeanalyzer.exceptions.LlmServiceException.class)
                 .hasMessageContaining("384 dimensions");
+    }
+
+    @Test
+    @DisplayName("Falls back to a direct request when Spring AI fails on a missing usage block")
+    void usesDirectClientWhenUsageIsMissing() {
+        float[] vector = new float[EmbeddingService.VECTOR_DIMENSIONS];
+        vector[0] = 1f;
+        when(embeddingModel.embedForResponse(anyList()))
+                .thenThrow(new NullPointerException("Cannot invoke \"Usage.promptTokens()\" because \"usage\" is null"));
+        when(directEmbeddingClient.embed(List.of("query text"))).thenReturn(List.of(vector));
+
+        String result = embeddingService.generateQueryEmbedding("query text");
+
+        assertThat(result).startsWith("[1.0, 0.0");
+        verify(embeddingModel, never()).embed(anyString());
     }
 }
