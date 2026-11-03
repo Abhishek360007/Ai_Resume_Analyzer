@@ -99,10 +99,13 @@ const CandidateMatching = () => {
   }
 
   const selectedJob = jobs.find((j) => j.id === selectedJobId)
-  const matchesWithCandidates = matches.map((match) => ({
-    ...match,
-    candidate: candidates.find((c) => c.id === match.candidateId),
-  }))
+  // Always rank by score: a fresh "Match All" returns results in processing order
+  const matchesWithCandidates = [...matches]
+    .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
+    .map((match) => ({
+      ...match,
+      candidate: candidates.find((c) => c.id === match.candidateId),
+    }))
 
   return (
     <div className={styles.matching}>

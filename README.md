@@ -4,8 +4,26 @@ An AI-powered recruitment assistant that parses resumes, extracts structured can
 
 Built with **Java 21 / Spring Boot 3**, **Spring AI**, **PostgreSQL + pgvector**, **Apache Pekko**, and a **React 18 + TypeScript** frontend.
 
+**🎬 Demo video:** [Watch the 3-minute walkthrough](docs/demo/ai-resume-analyzer-demo.mp4) (captioned, end to end)
 **🌐 Live demo:** [ai-resume-analyzer-nwh6.onrender.com](https://ai-resume-analyzer-nwh6.onrender.com) (free hosting: the first visit after a quiet period can take a few minutes to wake up)
 **📘 Project guide:** [AI-Resume-Analyzer-Project-Guide.pdf](docs/AI-Resume-Analyzer-Project-Guide.pdf), a 30-page walkthrough of every feature, the AI, the architecture and how to present the project
+
+[![Demo: AI matching and score insights](docs/demo/demo-preview.gif)](docs/demo/ai-resume-analyzer-demo.mp4)
+
+## 🎬 Demo Video
+
+[**▶ Watch the full demo (3 min 16 s)**](docs/demo/ai-resume-analyzer-demo.mp4). Every step is captioned:
+
+1. Secure sign-in with role-based accounts
+2. Dashboard overview
+3. Creating a job requirement (skills, experience, education, domain)
+4. Uploading a batch of resumes, processed in the background
+5. Reviewing and confirming AI-extracted candidates (human in the loop)
+6. Candidate profiles built by AI
+7. AI matching with RAG, explainable scores, score insights and PDF export
+8. Admin dashboard: health checks, processing queue and match-run audit
+9. User management and roles
+10. Role-based access as a recruiter
 
 ![Dashboard](docs/images/dashboard.png)
 
