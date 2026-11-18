@@ -41,13 +41,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = getJwtFromRequest(request, isSseEndpoint);
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-                // The SSE endpoint may only be opened with a short-lived SSE token
-                // (it travels in the URL, so it must not be the 15-minute access
-                // token). Conversely, SSE tokens are not accepted anywhere else.
-                if (isSseEndpoint && !tokenProvider.isSseToken(jwt)) {
-                    log.warn("Rejected non-SSE token on SSE endpoint: {}", request.getRequestURI());
-                } else if (!isSseEndpoint && tokenProvider.isSseToken(jwt)) {
-                    log.warn("Rejected SSE token on non-SSE endpoint: {}", request.getRequestURI());
+                // Each token type is accepted in exactly one place (an allowlist, so a
+                // token with a missing or unknown type is rejected too):
+                //  - the SSE endpoint only takes the short-lived SSE token (it travels
+                //    in the URL, so it must not be the 15-minute access token);
+                //  - every other endpoint only takes an access token. In particular a
+                //    7-day refresh token must not work as a long-lived access token;
+                //    it is only for POST /api/auth/refresh, which checks it itself.
+                String expectedType = isSseEndpoint
+                        ? JwtTokenProvider.TYPE_SSE : JwtTokenProvider.TYPE_ACCESS;
+                String tokenType = tokenProvider.getTokenType(jwt);
+                if (!expectedType.equals(tokenType)) {
+                    log.warn("Rejected '{}' token on {} (expected '{}')",
+                            tokenType, request.getRequestURI(), expectedType);
                 } else {
                     String userId = tokenProvider.getUserIdFromToken(jwt);
                     String role = tokenProvider.getRoleFromToken(jwt);

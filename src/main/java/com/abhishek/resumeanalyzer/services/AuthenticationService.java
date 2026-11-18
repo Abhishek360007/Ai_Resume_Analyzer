@@ -128,7 +128,7 @@ public class AuthenticationService {
         }
 
         String tokenType = tokenProvider.getTokenType(refreshToken);
-        if (!"refresh".equals(tokenType)) {
+        if (!JwtTokenProvider.TYPE_REFRESH.equals(tokenType)) {
             throw new RuntimeException("Not a refresh token");
         }
 
