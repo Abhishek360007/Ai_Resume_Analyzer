@@ -4,6 +4,7 @@ import com.abhishek.resumeanalyzer.entities.JobQueue;
 import com.abhishek.resumeanalyzer.models.JobStatus;
 import com.abhishek.resumeanalyzer.models.JobType;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -35,6 +37,9 @@ public interface JobQueueRepository extends JpaRepository<JobQueue, UUID> {
      * @return List of locked pending jobs ordered by priority (desc) and created date (asc)
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    // -2 = SKIP LOCKED: two instances claiming at once each take different rows instead of
+    // the second one waiting for the first to commit.
+    @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2"))
     @Query("SELECT j FROM JobQueue j WHERE j.status = 'PENDING' AND j.jobType = :jobType " +
            "AND (j.scheduledFor IS NULL OR j.scheduledFor <= CURRENT_TIMESTAMP) " +
            "ORDER BY j.priority DESC, j.createdAt ASC")

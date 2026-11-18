@@ -5,6 +5,7 @@ import com.abhishek.resumeanalyzer.pekko.ResumeProcessingStats;
 import com.abhishek.resumeanalyzer.services.ResumeJobProcessor;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.DispatcherSelector;
 import org.apache.pekko.actor.typed.SupervisorStrategy;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
@@ -59,9 +60,24 @@ public class ResumeJobSupervisor extends AbstractBehavior<ResumeJobSupervisor.Co
             Behavior<ResumeWorkerActor.Command> worker = Behaviors.supervise(
                     ResumeWorkerActor.create(resumeJobProcessor, stats, getContext().getSelf()))
                     .onFailure(SupervisorStrategy.restartWithBackoff(minBackoff, maxBackoff, 0.2));
-            workers.add(getContext().spawn(worker, "resume-worker-" + i));
+            workers.add(getContext().spawn(worker, "resume-worker-" + i, workerDispatcher(getContext())));
         }
         getContext().getLog().info("Created {} resume worker actors", workers.size());
+    }
+
+    /** Config path of the thread pool for blocking work, defined in ResumePekkoConfig. */
+    static final String WORKER_DISPATCHER = "pekko.actor.worker-dispatcher";
+
+    /**
+     * Workers make blocking calls (the LLM over HTTP, JDBC), so they run on their own
+     * fixed thread pool instead of Pekko's default dispatcher, where blocking would starve
+     * the threads every other actor and stream depends on. Falls back to the default
+     * dispatcher when the pool isn't configured (e.g. in the actor test kit).
+     */
+    static DispatcherSelector workerDispatcher(ActorContext<?> context) {
+        return context.getSystem().settings().config().hasPath(WORKER_DISPATCHER)
+                ? DispatcherSelector.fromConfig(WORKER_DISPATCHER)
+                : DispatcherSelector.defaultDispatcher();
     }
 
     public static Behavior<Command> create(ResumeJobProcessor resumeJobProcessor,

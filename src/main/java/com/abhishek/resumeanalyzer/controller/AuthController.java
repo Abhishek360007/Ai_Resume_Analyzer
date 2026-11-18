@@ -186,13 +186,12 @@ public class AuthController {
     }
 
     /**
-     * Logout (client-side token invalidation)
-     * POST /api/auth/logout
+     * Logout: revokes the user's tokens on the server (every session), not just in the browser.
+     * POST /api/auth/logout  (with the Bearer access token)
      */
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
-        // In a stateless JWT setup, logout is handled client-side by removing the token
-        // For enhanced security, implement token blacklisting here if needed
+        SecurityUtils.getCurrentUser().ifPresent(authenticationService::logout);
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
 
