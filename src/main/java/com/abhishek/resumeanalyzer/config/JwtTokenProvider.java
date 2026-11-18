@@ -23,6 +23,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class JwtTokenProvider {
 
+    /** Values of the {@code type} claim. Each type is accepted in exactly one place. */
+    public static final String TYPE_ACCESS = "access";
+    public static final String TYPE_REFRESH = "refresh";
+    public static final String TYPE_SSE = "sse";
+
     @Value("${jwt.secret:YourSecretKeyMustBeAtLeast256BitsLongForHS256AlgorithmToWorkProperlyPleaseChangeThisInProduction}")
     private String jwtSecret;
 
@@ -56,21 +61,21 @@ public class JwtTokenProvider {
      */
     public String generateAccessToken(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
-        return generateToken(user, accessTokenExpirationMs, "access");
+        return generateToken(user, accessTokenExpirationMs, TYPE_ACCESS);
     }
 
     /**
      * Generate access token from user
      */
     public String generateAccessToken(User user) {
-        return generateToken(user, accessTokenExpirationMs, "access");
+        return generateToken(user, accessTokenExpirationMs, TYPE_ACCESS);
     }
 
     /**
      * Generate refresh token for user
      */
     public String generateRefreshToken(User user) {
-        return generateToken(user, refreshTokenExpirationMs, "refresh");
+        return generateToken(user, refreshTokenExpirationMs, TYPE_REFRESH);
     }
 
     /**
@@ -82,7 +87,7 @@ public class JwtTokenProvider {
      * limits the exposure compared to reusing the 15-minute access token.</p>
      */
     public String generateSseToken(User user) {
-        return generateToken(user, sseTokenExpirationMs, "sse");
+        return generateToken(user, sseTokenExpirationMs, TYPE_SSE);
     }
 
     /**
@@ -90,7 +95,7 @@ public class JwtTokenProvider {
      */
     public boolean isSseToken(String token) {
         try {
-            return "sse".equals(getTokenType(token));
+            return TYPE_SSE.equals(getTokenType(token));
         } catch (Exception e) {
             return false;
         }
