@@ -43,6 +43,17 @@ public class FileUploadService {
     @Value("${app.upload.directory:./uploads}")
     private String uploadDirectory;
 
+    // ZIP limits: a small archive can expand to gigabytes (a "zip bomb"), so entries are
+    // read with a byte budget instead of trusting the sizes the archive claims.
+    @Value("${app.upload.zip.max-entries:200}")
+    private int zipMaxEntries = 200;
+
+    @Value("${app.upload.zip.max-entry-bytes:10485760}") // 10 MB per resume
+    private long zipMaxEntryBytes = 10L * 1024 * 1024;
+
+    @Value("${app.upload.zip.max-total-bytes:104857600}") // 100 MB in total
+    private long zipMaxTotalBytes = 100L * 1024 * 1024;
+
     @Value("${app.upload.allowed-extensions:.doc,.docx,.pdf,.txt}")
     private String allowedExtensions;
 
@@ -188,7 +199,10 @@ public class FileUploadService {
             throws IOException {
         log.info("Expanding ZIP upload: {}", zipFilename);
 
-        int jobCount = 0;
+        // Read and check the whole archive first, then enqueue: an archive that breaks a limit
+        // is rejected as a whole instead of leaving some of its resumes queued.
+        java.util.List<Map.Entry<String, byte[]>> resumes = new java.util.ArrayList<>();
+        long totalBytes = 0;
         try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(zipData))) {
             ZipEntry entry;
             while ((entry = zipInputStream.getNextEntry()) != null) {
@@ -200,13 +214,40 @@ public class FileUploadService {
                     log.warn("Skipping unsupported file in ZIP: {}", entryName);
                     continue;
                 }
-                byte[] entryData = zipInputStream.readAllBytes();
-                createResumeJob(entryData, entryName, trackerId, correlationId);
-                jobCount++;
+                if (resumes.size() >= zipMaxEntries) {
+                    throw new IllegalArgumentException("The ZIP holds more than " + zipMaxEntries + " resumes");
+                }
+                byte[] entryData = readLimited(zipInputStream, entryName,
+                        Math.min(zipMaxEntryBytes, zipMaxTotalBytes - totalBytes));
+                totalBytes += entryData.length;
+                resumes.add(Map.entry(entryName, entryData));
             }
         }
+        for (Map.Entry<String, byte[]> resume : resumes) {
+            createResumeJob(resume.getValue(), resume.getKey(), trackerId, correlationId);
+        }
+        int jobCount = resumes.size();
         log.info("Created {} jobs from ZIP: {}", jobCount, zipFilename);
         return jobCount;
+    }
+
+    /**
+     * Reads one ZIP entry, failing as soon as it exceeds {@code limit} bytes. The size the
+     * archive declares can't be trusted, so the actual bytes are counted while reading.
+     */
+    private static byte[] readLimited(ZipInputStream in, String entryName, long limit) throws IOException {
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        long total = 0;
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            total += read;
+            if (total > limit) {
+                throw new IllegalArgumentException("A file in the ZIP is too large once extracted: " + entryName);
+            }
+            out.write(buffer, 0, read);
+        }
+        return out.toByteArray();
     }
 
     /**

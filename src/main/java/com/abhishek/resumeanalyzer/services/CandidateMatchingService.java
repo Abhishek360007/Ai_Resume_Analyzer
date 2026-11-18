@@ -177,7 +177,7 @@ public class CandidateMatchingService {
                 .domainScore(matchResponse.getDomainScore())
                 .matchExplanation(buildExplanation(matchResponse))
                 .isSelected(false)
-                .isShortlisted(matchResponse.getMatchScore() >= 70.0)
+                .isShortlisted(MatchScoring.shortlisted(matchResponse.getMatchScore()))
                 .build();
 
         return matchRepository.save(match);
@@ -202,7 +202,7 @@ public class CandidateMatchingService {
         existingMatch.setMatchExplanation(buildExplanation(matchResponse));
 
         // Auto-shortlist if score is high
-        if (matchResponse.getMatchScore() >= 70.0 && !existingMatch.getIsSelected()) {
+        if (MatchScoring.shortlisted(matchResponse.getMatchScore()) && !existingMatch.getIsSelected()) {
             existingMatch.setIsShortlisted(true);
         }
 
@@ -265,13 +265,13 @@ public class CandidateMatchingService {
                 && firstPass.getMatchScore() >= enrichmentProps.getMultiPass().getBorderlineMin()
                 && firstPass.getMatchScore() <= enrichmentProps.getMultiPass().getBorderlineMax()) {
 
-            log.info("[AGENTIC] Borderline score {:.0f} for {} — running second pass with enrichment",
+            log.info("[AGENTIC] Borderline score {} for {} — running second pass with enrichment",
                     firstPass.getMatchScore(), candidate.getName());
             try {
                 String enrichedContext2 = enrichmentService.buildEnrichmentContext(candidate.getId(), job);
                 if (enrichedContext2 != null) {
                     CandidateMatchResponse secondPass = doMatch(candidate, job, enrichedContext2);
-                    log.info("[AGENTIC] Multi-pass score: {:.0f} → {:.0f} for {}",
+                    log.info("[AGENTIC] Multi-pass score: {} → {} for {}",
                             firstPass.getMatchScore(), secondPass.getMatchScore(), candidate.getName());
                     return secondPass;
                 }
@@ -311,6 +311,8 @@ public class CandidateMatchingService {
                     + (response.getFailureReason() != null ? response.getFailureReason()
                             : "check the AI provider connection and API key"));
         }
+        // The model judges the four areas; the overall score is calculated here, not by the model
+        MatchScoring.apply(response);
         return response;
     }
 

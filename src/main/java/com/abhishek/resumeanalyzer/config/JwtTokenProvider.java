@@ -28,7 +28,12 @@ public class JwtTokenProvider {
     public static final String TYPE_REFRESH = "refresh";
     public static final String TYPE_SSE = "sse";
 
-    @Value("${jwt.secret:YourSecretKeyMustBeAtLeast256BitsLongForHS256AlgorithmToWorkProperlyPleaseChangeThisInProduction}")
+    /** Defaults that were once published in this repository; never accepted as a real key. */
+    private static final java.util.Set<String> KNOWN_DEFAULT_SECRETS = java.util.Set.of(
+            "YourSecretKeyMustBeAtLeast256BitsLongForHS256AlgorithmToWorkProperlyPleaseChangeThisInProduction",
+            "change-me-to-a-long-random-string");
+
+    @Value("${jwt.secret:}")
     private String jwtSecret;
 
     @Value("${jwt.access-token-expiration-ms:900000}") // 15 minutes
@@ -44,13 +49,26 @@ public class JwtTokenProvider {
 
     @PostConstruct
     public void init() {
-        // Ensure the key is at least 256 bits for HS256
-        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
-        if (keyBytes.length < 32) {
-            log.warn("JWT secret is less than 256 bits. Using a padded key.");
-            keyBytes = new byte[32];
-            System.arraycopy(jwtSecret.getBytes(StandardCharsets.UTF_8), 0, keyBytes, 0,
-                    Math.min(jwtSecret.getBytes(StandardCharsets.UTF_8).length, 32));
+        byte[] keyBytes;
+        if (jwtSecret == null || jwtSecret.isBlank() || KNOWN_DEFAULT_SECRETS.contains(jwtSecret.trim())) {
+            // No secret, or the one published in this repository (anyone could forge tokens
+            // with it). Use a random key: safe, but sign-ins don't survive a restart.
+            log.warn("JWT_SECRET is not set (or is the public default). Using a random signing key: "
+                    + "every sign-in ends when the app restarts. Set JWT_SECRET to a long random value.");
+            keyBytes = new byte[64];
+            new java.security.SecureRandom().nextBytes(keyBytes);
+        } else {
+            keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+            if (keyBytes.length < 32) {
+                // HS256 needs 256 bits. Stretch a short secret with SHA-256 instead of padding
+                // it with zeros; it's still only as strong as the secret, so warn.
+                log.warn("JWT_SECRET is shorter than 32 bytes; use a longer random value.");
+                try {
+                    keyBytes = java.security.MessageDigest.getInstance("SHA-256").digest(keyBytes);
+                } catch (java.security.NoSuchAlgorithmException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
         }
         this.key = Keys.hmacShaKeyFor(keyBytes);
         log.info("JWT Token Provider initialized with access token expiration: {} ms", accessTokenExpirationMs);
@@ -151,6 +169,13 @@ public class JwtTokenProvider {
     public String getRoleFromToken(String token) {
         Claims claims = parseClaims(token);
         return claims.get("role", String.class);
+    }
+
+    /**
+     * When the token was issued (whole seconds)
+     */
+    public Date getIssuedAt(String token) {
+        return parseClaims(token).getIssuedAt();
     }
 
     /**

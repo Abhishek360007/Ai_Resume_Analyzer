@@ -120,6 +120,17 @@ public class AuthenticationService {
     }
 
     /**
+     * Signs the user out of every session: their access and refresh tokens stop working.
+     */
+    @Transactional
+    public void logout(User user) {
+        userRepository.findById(user.getId()).ifPresent(u -> {
+            u.revokeTokens();
+            userRepository.save(u);
+        });
+    }
+
+    /**
      * Refresh access token using refresh token
      */
     public AuthResponse refreshToken(String refreshToken) {
@@ -139,15 +150,20 @@ public class AuthenticationService {
         if (!user.isActive()) {
             throw new RuntimeException("User account is inactive");
         }
+        if (user.isTokenRevoked(tokenProvider.getIssuedAt(refreshToken))) {
+            throw new RuntimeException("Session has ended; please sign in again");
+        }
 
-        // Generate new access token
+        // Generate new access token, and a new refresh token (rotation): the client always
+        // holds the newest one, and each lives at most 7 days from its last use.
         String newAccessToken = tokenProvider.generateAccessToken(user);
+        String newRefreshToken = tokenProvider.generateRefreshToken(user);
 
         log.debug("Access token refreshed for user: {}", user.getUsername());
 
         return AuthResponse.builder()
                 .accessToken(newAccessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(newRefreshToken)
                 .userId(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
@@ -185,8 +201,9 @@ public class AuthenticationService {
             throw new RuntimeException("Incorrect old password");
         }
 
-        // Update password
+        // Update password, and sign out every session (a stolen token stops working)
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.revokeTokens();
         userRepository.save(user);
 
         // Log password change
@@ -201,6 +218,7 @@ public class AuthenticationService {
     @Transactional
     public void resetPassword(User user, String newPassword, User admin, HttpServletRequest request) {
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.revokeTokens();
         userRepository.save(user);
 
         // Log password reset
@@ -216,6 +234,7 @@ public class AuthenticationService {
     @Transactional
     public void deactivateUser(User user, User admin, HttpServletRequest request) {
         user.setActive(false);
+        user.revokeTokens();
         userRepository.save(user);
 
         // Log deactivation

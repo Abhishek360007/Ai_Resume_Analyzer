@@ -140,7 +140,7 @@ class CandidateMatchingServiceTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getMatchScore()).isEqualTo(92.0);
+        assertThat(result.getMatchScore()).isEqualTo(93.3); // 0.40*95 + 0.25*90 + 0.20*100 + 0.15*85, not the model's 92
         assertThat(result.getSkillsScore()).isEqualTo(95.0);
         assertThat(result.getExperienceScore()).isEqualTo(90.0);
         assertThat(result.getIsShortlisted()).isTrue(); // Score >= 70
@@ -181,7 +181,7 @@ class CandidateMatchingServiceTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getMatchScore()).isEqualTo(92.0); // Updated score
+        assertThat(result.getMatchScore()).isEqualTo(93.3); // Updated score, calculated from the sub-scores
         assertThat(result.getSkillsScore()).isEqualTo(95.0);
 
         verify(matchRepository).save(any(CandidateMatch.class));
@@ -305,7 +305,7 @@ class CandidateMatchingServiceTest {
 
         // Then
         assertThat(result.getIsShortlisted()).isTrue(); // Score >= 70
-        assertThat(result.getMatchScore()).isEqualTo(85.0);
+        assertThat(result.getMatchScore()).isEqualTo(85.8); // weighted: 36 + 20 + 17 + 12.75
     }
 
     @Test

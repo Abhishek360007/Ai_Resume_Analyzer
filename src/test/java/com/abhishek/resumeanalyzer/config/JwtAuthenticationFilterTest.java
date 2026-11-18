@@ -71,6 +71,49 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    @DisplayName("A token issued before logout / password change is rejected")
+    void tokenIssuedBeforeRevocationIsRejected() throws Exception {
+        String token = tokenProvider.generateAccessToken(user);
+        user.setTokensValidAfter(java.time.Instant.now().plusSeconds(1)); // signed out after it was issued
+
+        assertThat(authenticate(API, bearer(token))).isNull();
+    }
+
+    @Test
+    @DisplayName("A token issued after the last revocation still works")
+    void tokenIssuedAfterRevocationWorks() throws Exception {
+        user.setTokensValidAfter(java.time.Instant.now().minusSeconds(5));
+
+        assertThat(authenticate(API, bearer(tokenProvider.generateAccessToken(user)))).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Without JWT_SECRET (or with the published default) each instance uses its own random key")
+    void missingOrPublishedSecretNeverSignsForgeableTokens() {
+        JwtTokenProvider withPublishedDefault = provider(
+                "YourSecretKeyMustBeAtLeast256BitsLongForHS256AlgorithmToWorkProperlyPleaseChangeThisInProduction");
+        JwtTokenProvider otherInstance = provider(
+                "YourSecretKeyMustBeAtLeast256BitsLongForHS256AlgorithmToWorkProperlyPleaseChangeThisInProduction");
+        JwtTokenProvider blank = provider("");
+
+        String token = withPublishedDefault.generateAccessToken(user);
+
+        assertThat(withPublishedDefault.validateToken(token)).isTrue();
+        assertThat(otherInstance.validateToken(token)).isFalse(); // the public default is not the key
+        assertThat(blank.validateToken(token)).isFalse();
+    }
+
+    private static JwtTokenProvider provider(String secret) {
+        JwtTokenProvider p = new JwtTokenProvider();
+        ReflectionTestUtils.setField(p, "jwtSecret", secret);
+        ReflectionTestUtils.setField(p, "accessTokenExpirationMs", 900_000L);
+        ReflectionTestUtils.setField(p, "refreshTokenExpirationMs", 604_800_000L);
+        ReflectionTestUtils.setField(p, "sseTokenExpirationMs", 60_000L);
+        p.init();
+        return p;
+    }
+
+    @Test
     @DisplayName("Refresh token is rejected as a Bearer token on the API")
     void refreshTokenIsNotAnAccessToken() throws Exception {
         assertThat(authenticate(API, bearer(tokenProvider.generateRefreshToken(user)))).isNull();

@@ -94,6 +94,36 @@ class FileUploadServiceTest {
     }
 
     @Test
+    void zipEntryThatExpandsPastTheLimitIsRejectedAndNothingIsQueued() throws IOException {
+        // 2 MB of zeros compresses to a few KB: the archive is small, its contents are not
+        ReflectionTestUtils.setField(fileUploadService, "zipMaxEntryBytes", 1024L * 1024);
+        Map<String, String> entries = new LinkedHashMap<>();
+        entries.put("ok.pdf", "PDF");
+        entries.put("bomb.pdf", "0".repeat(2 * 1024 * 1024));
+        MultipartFile file = createMockFile("batch.zip", buildZip(entries));
+        when(fileParserService.isValidFileFormat(anyString())).thenReturn(true);
+        when(trackerRepository.save(any(ProcessTracker.class))).thenReturn(createMockTracker(testTrackerId, "batch.zip"));
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> fileUploadService.handleFileUpload(file));
+
+        assertTrue(error.getMessage().contains("bomb.pdf"));
+        verify(jobQueueService, never()).createJob(any(), any(), any(), any(), any()); // not even ok.pdf
+    }
+
+    @Test
+    void zipWithTooManyResumesIsRejected() throws IOException {
+        ReflectionTestUtils.setField(fileUploadService, "zipMaxEntries", 2);
+        MultipartFile file = createMockFile("batch.zip", buildZip(
+            Map.of("a.pdf", "A", "b.pdf", "B", "c.pdf", "C")));
+        when(fileParserService.isValidFileFormat(anyString())).thenReturn(true);
+        when(trackerRepository.save(any(ProcessTracker.class))).thenReturn(createMockTracker(testTrackerId, "batch.zip"));
+
+        assertThrows(IllegalArgumentException.class, () -> fileUploadService.handleFileUpload(file));
+        verify(jobQueueService, never()).createJob(any(), any(), any(), any(), any());
+    }
+
+    @Test
     void testHandleFileUpload_ZipFile_CreatesJobPerEntry() throws IOException {
         // Arrange
         MultipartFile file = createMockFile("batch.zip", buildZip(

@@ -84,7 +84,8 @@ spring:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:YourSecretKeyMustBeAtLeast256BitsLongForHS256AlgorithmToWorkProperlyPleaseChangeThisInProduction}
+  # Required in production. Without it a random key is used and sign-ins end on every restart.
+  secret: ${JWT_SECRET:}
   access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}  # 15 minutes
   refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}  # 7 days
   sse-token-expiration-ms: ${JWT_SSE_TOKEN_EXPIRATION:60000}  # 60 seconds

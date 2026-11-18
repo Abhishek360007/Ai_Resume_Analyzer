@@ -62,7 +62,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     User user = userRepository.findById(UUID.fromString(userId))
                             .orElse(null);
 
-                    if (user != null && user.isActive()) {
+                    if (user != null && user.isActive() && user.isTokenRevoked(tokenProvider.getIssuedAt(jwt))) {
+                        // Issued before a logout, password change or deactivation
+                        log.debug("Rejected a revoked token for user {}", userId);
+                    } else if (user != null && user.isActive()) {
                         // Create authentication token
                         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
                         UsernamePasswordAuthenticationToken authentication =

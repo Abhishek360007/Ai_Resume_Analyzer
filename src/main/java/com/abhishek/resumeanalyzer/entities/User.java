@@ -53,6 +53,14 @@ public class User {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
+    /**
+     * Access and refresh tokens issued before this instant are no longer accepted. Moved
+     * forward on logout, password change or reset and deactivation: the way to revoke
+     * stateless JWTs without a token store.
+     */
+    @Column(name = "tokens_valid_after")
+    private java.time.Instant tokensValidAfter;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -107,6 +115,23 @@ public class User {
      */
     public boolean isAdmin() {
         return this.role == UserRole.ADMIN;
+    }
+
+    /** Signs out every session: tokens issued until now stop working. */
+    public void revokeTokens() {
+        this.tokensValidAfter = java.time.Instant.now();
+    }
+
+    /** True if a token issued at {@code issuedAt} was revoked by {@link #revokeTokens()}. */
+    public boolean isTokenRevoked(java.util.Date issuedAt) {
+        if (tokensValidAfter == null) {
+            return false;
+        }
+        if (issuedAt == null) {
+            return true;
+        }
+        // JWT times have whole-second precision
+        return issuedAt.toInstant().getEpochSecond() < tokensValidAfter.getEpochSecond();
     }
 
     /**
